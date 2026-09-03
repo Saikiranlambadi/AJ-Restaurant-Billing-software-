@@ -9,7 +9,7 @@
     "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "preview": "npm run preview --prefix frontend"
   },
-  "allowScripts": {
-    "esbuild": true
-  }
+  "allowScripts": [
+    "esbuild"
+  ]
 }
