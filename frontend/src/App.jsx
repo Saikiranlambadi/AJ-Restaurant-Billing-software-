@@ -33,7 +33,7 @@ function LoginPage({ onLoginSuccess }) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">🍽️</div>
+          <div className="login-logo"><img src="/images/logo.jpg" alt="AJ Billing" style={{ width: "64px", height: "64px", borderRadius: "50%", objectFit: "cover" }} /></div>
           <h1>AJ Billing</h1>
           <p>Owner Access Portal</p>
         </div>
@@ -110,7 +110,7 @@ function App() {
   ];
   return <div className="app-shell">
     <aside className={"sidebar " + (mobile ? "open" : "")}>
-      <div className="brand"><span>🍽️</span><div><b>AJ Billing</b><small>Restaurant POS</small></div></div>
+      <div className="brand"><img src="/images/logo.jpg" alt="AJ Billing" style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} /><div><b>AJ Billing</b><small>Restaurant POS</small></div></div>
       <nav>{nav.map(([id, label, Icon]) => <button key={id} className={page === id ? "active" : ""} onClick={() => { setPage(id); setMobile(false) }}><Icon size={19} />{label}</button>)}</nav>
       <button className="logout" onClick={handleLogout} style={{ marginTop: "auto", cursor: "pointer" }}><LogOut size={18} /> Logout</button>
     </aside>
@@ -192,11 +192,18 @@ function Billing() {
     Promise.all([api.items(), api.categories(), api.settings()]).then(([i, c, s]) => {
       const normalized = (i || []).map(item => ({
         ...item,
-        image: item.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80"
+        image: item.image || "/images/food-placeholder.jpg"
       }));
       setItems(normalized);
       setCats(c || []);
       setSettings(s);
+      setCart(prevCart => {
+        if (!prevCart || !prevCart.length) return [];
+        return prevCart.map(cartItem => {
+          const fresh = normalized.find(x => String(x.id) === String(cartItem.id));
+          return fresh ? { ...cartItem, price: fresh.price, name: fresh.name, image: fresh.image } : cartItem;
+        });
+      });
     }).catch(err => {
       console.error("Failed to load billing data:", err);
       setError(err.message || "Failed to load data from server");
@@ -215,7 +222,7 @@ function Billing() {
 
   const total = cart.reduce((s, x) => s + x.price * x.quantity, 0);
 
-  function add(item) { setCart(c => { const found = c.find(x => x.id === item.id); return found ? c.map(x => x.id === item.id ? { ...x, quantity: x.quantity + 1 } : x) : [...c, { ...item, quantity: 1 }] }) }
+  function add(item) { setCart(c => { const found = c.find(x => x.id === item.id); return found ? c.map(x => x.id === item.id ? { ...x, price: item.price, name: item.name, image: item.image, quantity: x.quantity + 1 } : x) : [...c, { ...item, quantity: 1 }] }) }
   function change(id, d) { setCart(c => c.map(x => x.id === id ? { ...x, quantity: x.quantity + d } : x).filter(x => x.quantity > 0)) }
 
   const handleSplitPayment = () => {
@@ -323,7 +330,7 @@ function Items() {
   };
   const list = items.filter(x => x.name.toLowerCase().includes(search.toLowerCase()));
   return <div><Toolbar title="Food Items" search={search} setSearch={setSearch} action={() => { setEditing(null); setShow(true) }} label="Add Item" />
-    <div className="panel table-wrap"><table><thead><tr><th>Image</th><th>Item</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>{list.map(x => <tr key={x.id}><td><img src={x.image || "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=500&q=80"} alt={x.name} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} /></td><td><b>{x.name}</b></td><td>{x.category_name || "Uncategorized"}</td><td>{money(x.price)}</td><td><span className={x.available ? "badge success" : "badge"}>{x.available ? "Available" : "Unavailable"}</span></td><td className="actions"><button onClick={() => { setEditing(x); setShow(true) }}><Pencil size={16} /></button><button onClick={async () => { if (confirm("Delete item?")) { await api.deleteItem(x.id); load() } }}><Trash2 size={16} /></button></td></tr>)}</tbody></table></div>
+    <div className="panel table-wrap"><table><thead><tr><th>Image</th><th>Item</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>{list.map(x => <tr key={x.id}><td><img src={x.image || "/images/food-placeholder.jpg"} alt={x.name} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} /></td><td><b>{x.name}</b></td><td>{x.category_name || "Uncategorized"}</td><td>{money(x.price)}</td><td><span className={x.available ? "badge success" : "badge"}>{x.available ? "Available" : "Unavailable"}</span></td><td className="actions"><button onClick={() => { setEditing(x); setShow(true) }}><Pencil size={16} /></button><button onClick={async () => { if (confirm("Delete item?")) { await api.deleteItem(x.id); load() } }}><Trash2 size={16} /></button></td></tr>)}</tbody></table></div>
     {show && <Modal title={editing ? "Edit Item" : "Add Food Item"} onClose={() => { setShow(false); setEditing(null) }}><form onSubmit={save} className="form"><label>Item Name<input name="name" defaultValue={editing?.name || ""} required /></label><label>Category<select name="category_id" defaultValue={editing?.category_id || ""}><option value="">Select category</option>{cats.map(c => <option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label>Price<input name="price" type="number" step="0.01" min="0" defaultValue={editing?.price || ""} required /></label><label>Image URL<input name="image" defaultValue={editing?.image || ""} placeholder="https://images.unsplash.com/..." /></label><label className="check"><input name="available" type="checkbox" defaultChecked={editing ? !!editing.available : true} /> Available</label><button className="primary"><Save size={17} /> Save Item</button></form></Modal>}</div>
 }
 

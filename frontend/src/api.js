@@ -7,76 +7,81 @@ const DEFAULT_CATEGORIES = [
   { id: 4, name: "NON VEG" },
   { id: 5, name: "NAANS" },
   { id: 6, name: "BIRYANI VEG" },
-  { id: 7, name: "NON VEG BIRYANI" }
+  { id: 7, name: "NON VEG BIRYANI" },
+  { id: 8, name: "BEVERAGES & COOL DRINKS" }
 ];
 
 const DEFAULT_ITEMS = [
   // STARTERS (VEG)
-  { id: 1, name: "Veg Manchurian", category_id: 1, price: 150, available: 1, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&auto=format&fit=crop&q=80" },
-  { id: 2, name: "Paneer Manchurian", category_id: 1, price: 240, available: 1, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500&auto=format&fit=crop&q=80" },
-  { id: 3, name: "Chilli Paneer", category_id: 1, price: 250, available: 1, image: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=500&auto=format&fit=crop&q=80" },
-  { id: 4, name: "KFC Paneer", category_id: 1, price: 240, available: 1, image: "https://images.unsplash.com/photo-1562967914-608f82629710?w=500&auto=format&fit=crop&q=80" },
-  { id: 5, name: "Paneer Finger", category_id: 1, price: 240, available: 1, image: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=500&auto=format&fit=crop&q=80" },
-  { id: 6, name: "Paneer Tikka", category_id: 1, price: 250, available: 1, image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=500&auto=format&fit=crop&q=80" },
+  { id: 1, name: "Veg Manchurian", category_id: 1, price: 150, available: 1, image: "/images/dishes/Veg Manchurian.png" },
+  { id: 2, name: "Paneer Manchurian", category_id: 1, price: 240, available: 1, image: "/images/dishes/Paneer Manchurian.png" },
+  { id: 3, name: "Chilli Paneer", category_id: 1, price: 250, available: 1, image: "/images/dishes/Chilli Paneer.png" },
+  { id: 4, name: "KFC Paneer", category_id: 1, price: 240, available: 1, image: "/images/dishes/KFC Paneer.png" },
+  { id: 5, name: "Paneer Finger", category_id: 1, price: 240, available: 1, image: "/images/dishes/Paneer Finger.png" },
+  { id: 6, name: "Paneer Tikka", category_id: 1, price: 250, available: 1, image: "/images/dishes/Paneer Tikka.png" },
 
   // STARTERS (NON VEG)
-  { id: 7, name: "Chicken Tikka Full", category_id: 2, price: 250, available: 1, image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=500&auto=format&fit=crop&q=80" },
-  { id: 8, name: "Chicken Tikka Half", category_id: 2, price: 180, available: 1, image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=500&auto=format&fit=crop&q=80" },
-  { id: 9, name: "Tandoori Chicken", category_id: 2, price: 260, available: 1, image: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=80" },
-  { id: 10, name: "Chicken KFC", category_id: 2, price: 250, available: 1, image: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=500&auto=format&fit=crop&q=80" },
-  { id: 11, name: "Chilli Chicken", category_id: 2, price: 220, available: 1, image: "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=500&auto=format&fit=crop&q=80" },
-  { id: 12, name: "Chicken Manchurian", category_id: 2, price: 200, available: 1, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=80" },
-  { id: 13, name: "Chicken 65", category_id: 2, price: 200, available: 1, image: "https://images.unsplash.com/photo-1610057099431-d73a1c9d2f2f?w=500&auto=format&fit=crop&q=80" },
-  { id: 14, name: "Chicken Lollipop, 4 Piece", category_id: 2, price: 150, available: 1, image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=500&auto=format&fit=crop&q=80" },
-  { id: 15, name: "Chicken Lollipop, 7 Piece", category_id: 2, price: 250, available: 1, image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=500&auto=format&fit=crop&q=80" },
-  { id: 16, name: "Chicken Drumsticks", category_id: 2, price: 250, available: 1, image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?w=500&auto=format&fit=crop&q=80" },
+  { id: 7, name: "Chicken Tikka Full", category_id: 2, price: 250, available: 1, image: "/images/dishes/Chicken Tikka Full.png" },
+  { id: 8, name: "Chicken Tikka Half", category_id: 2, price: 180, available: 1, image: "/images/dishes/Chicken Tikka Half.png" },
+  { id: 9, name: "Tandoori Chicken", category_id: 2, price: 260, available: 1, image: "/images/dishes/Thandur Chicken.png" },
+  { id: 10, name: "Chicken KFC", category_id: 2, price: 250, available: 1, image: "/images/dishes/Chicken KFC.png" },
+  { id: 11, name: "Chilli Chicken", category_id: 2, price: 220, available: 1, image: "/images/dishes/Chilli Chicken..png" },
+  { id: 12, name: "Chicken Manchurian", category_id: 2, price: 200, available: 1, image: "/images/dishes/Chicken Manchurian.png" },
+  { id: 13, name: "Chicken 65", category_id: 2, price: 200, available: 1, image: "/images/dishes/Chicken 65.png" },
+  { id: 14, name: "Chicken Lollipop, 4 Piece", category_id: 2, price: 150, available: 1, image: "/images/dishes/Chicken Lollipop.png" },
+  { id: 15, name: "Chicken Lollipop, 7 Piece", category_id: 2, price: 250, available: 1, image: "/images/dishes/Chicken Lollipop.png" },
+  { id: 16, name: "Chicken Drumsticks", category_id: 2, price: 250, available: 1, image: "/images/dishes/Chicken Drumsticks..png" },
 
   // VEG CURRYS
-  { id: 17, name: "Paneer Butter Masala", category_id: 3, price: 200, available: 1, image: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=500&auto=format&fit=crop&q=80" },
-  { id: 18, name: "Kaju Paneer", category_id: 3, price: 250, available: 1, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=500&auto=format&fit=crop&q=80" },
-  { id: 19, name: "Kaju Curry", category_id: 3, price: 250, available: 1, image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=500&auto=format&fit=crop&q=80" },
-  { id: 20, name: "Palak Paneer", category_id: 3, price: 220, available: 1, image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&auto=format&fit=crop&q=80" },
-  { id: 21, name: "Dal Tadka", category_id: 3, price: 130, available: 1, image: "https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=500&auto=format&fit=crop&q=80" },
-  { id: 22, name: "Dal Fry", category_id: 3, price: 120, available: 1, image: "https://images.unsplash.com/photo-1546833998-877b37c2e5c6?w=500&auto=format&fit=crop&q=80" },
-  { id: 23, name: "Kadai Paneer", category_id: 3, price: 220, available: 1, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80" },
-  { id: 24, name: "Sai Paneer", category_id: 3, price: 200, available: 1, image: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=500&auto=format&fit=crop&q=80" },
-  { id: 25, name: "Lemon Paneer", category_id: 3, price: 200, available: 1, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=500&auto=format&fit=crop&q=80" },
+  { id: 17, name: "Paneer Butter Masala", category_id: 3, price: 200, available: 1, image: "/images/dishes/Paneer Butter Masala.png" },
+  { id: 18, name: "Kaju Paneer", category_id: 3, price: 250, available: 1, image: "/images/dishes/Kaju Paneer.png" },
+  { id: 19, name: "Kaju Curry", category_id: 3, price: 250, available: 1, image: "/images/dishes/Kaju Curry.png" },
+  { id: 20, name: "Palak Paneer", category_id: 3, price: 220, available: 1, image: "/images/dishes/Palak Paneer.png" },
+  { id: 21, name: "Dal Tadka", category_id: 3, price: 130, available: 1, image: "/images/dishes/Dal Tadka.png" },
+  { id: 22, name: "Dal Fry", category_id: 3, price: 120, available: 1, image: "/images/dishes/Dal Fry.png" },
+  { id: 23, name: "Kadai Paneer", category_id: 3, price: 220, available: 1, image: "/images/dishes/Kadai Paneer.png" },
+  { id: 24, name: "Sai Paneer", category_id: 3, price: 200, available: 1, image: "/images/dishes/Sai Paneer.png" },
+  { id: 25, name: "Lemon Paneer", category_id: 3, price: 200, available: 1, image: "/images/dishes/lemon paneer.png" },
 
   // NON VEG
-  { id: 26, name: "Kadai Chicken", category_id: 4, price: 220, available: 1, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=80" },
-  { id: 27, name: "Butter Chicken", category_id: 4, price: 240, available: 1, image: "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?w=500&auto=format&fit=crop&q=80" },
-  { id: 28, name: "Chicken Afghani", category_id: 4, price: 280, available: 1, image: "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=500&auto=format&fit=crop&q=80" },
-  { id: 29, name: "Chicken Curry", category_id: 4, price: 200, available: 1, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=80" },
-  { id: 30, name: "Chicken Curry Boneless", category_id: 4, price: 220, available: 1, image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=500&auto=format&fit=crop&q=80" },
-  { id: 31, name: "Egg Fry, 3 Eggs", category_id: 4, price: 150, available: 1, image: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=500&auto=format&fit=crop&q=80" },
+  { id: 26, name: "Kadai Chicken", category_id: 4, price: 220, available: 1, image: "/images/dishes/Kadai Chicken.png" },
+  { id: 27, name: "Butter Chicken", category_id: 4, price: 240, available: 1, image: "/images/dishes/Butter Chicken.png" },
+  { id: 28, name: "Chicken Afghani", category_id: 4, price: 280, available: 1, image: "/images/dishes/Chicken Afghani.png" },
+  { id: 29, name: "Chicken Curry", category_id: 4, price: 200, available: 1, image: "/images/dishes/Chicken Curry.png" },
+  { id: 30, name: "Chicken Curry Boneless", category_id: 4, price: 220, available: 1, image: "/images/dishes/Chicken Curry Boneless.png" },
+  { id: 31, name: "Egg Fry, 3 Eggs", category_id: 4, price: 150, available: 1, image: "/images/dishes/Egg Fry,.png" },
 
   // NAANS
-  { id: 32, name: "Tandoori Roti", category_id: 5, price: 20, available: 1, image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=500&auto=format&fit=crop&q=80" },
-  { id: 33, name: "Tandoori Butter Roti", category_id: 5, price: 40, available: 1, image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=500&auto=format&fit=crop&q=80" },
-  { id: 34, name: "Tandoori Butter Naan", category_id: 5, price: 50, available: 1, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80" },
-  { id: 35, name: "Plane Naan", category_id: 5, price: 30, available: 1, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80" },
-  { id: 36, name: "Garlic Naan", category_id: 5, price: 60, available: 1, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80" },
-  { id: 37, name: "Lacha Paratha", category_id: 5, price: 25, available: 1, image: "https://images.unsplash.com/photo-1626074353765-517a681e40be?w=500&auto=format&fit=crop&q=80" },
-  { id: 38, name: "Paneer Naan", category_id: 5, price: 60, available: 1, image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=500&auto=format&fit=crop&q=80" },
+  { id: 32, name: "Tandoori Roti", category_id: 5, price: 20, available: 1, image: "/images/dishes/Thandur Roti.png" },
+  { id: 33, name: "Tandoori Butter Roti", category_id: 5, price: 40, available: 1, image: "/images/dishes/Thandur Butter Roti.png" },
+  { id: 34, name: "Tandoori Butter Naan", category_id: 5, price: 50, available: 1, image: "/images/dishes/Thandur Butter Roti.png" },
+  { id: 35, name: "Plane Naan", category_id: 5, price: 30, available: 1, image: "/images/dishes/Plane Naan.png" },
+  { id: 36, name: "Garlic Naan", category_id: 5, price: 60, available: 1, image: "/images/dishes/Garlic Naan.png" },
+  { id: 37, name: "Lacha Paratha", category_id: 5, price: 25, available: 1, image: "/images/dishes/Plane Naan.png" },
+  { id: 38, name: "Paneer Naan", category_id: 5, price: 60, available: 1, image: "/images/dishes/Panner Naan.png" },
 
   // BIRYANI VEG
-  { id: 39, name: "Veg Biryani", category_id: 6, price: 180, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 40, name: "Paneer Biryani", category_id: 6, price: 230, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 41, name: "Kaju Paneer Biryani", category_id: 6, price: 250, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
+  { id: 39, name: "Veg Biryani", category_id: 6, price: 180, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 40, name: "Paneer Biryani", category_id: 6, price: 230, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 41, name: "Kaju Paneer Biryani", category_id: 6, price: 250, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
 
   // NON VEG BIRYANI
-  { id: 42, name: "Hyderabad Dum Biryani (Single)", category_id: 7, price: 150, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 43, name: "Hyderabad Dum Biryani (Full)", category_id: 7, price: 240, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 44, name: "Special Biryani (Single)", category_id: 7, price: 180, available: 1, image: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=500&auto=format&fit=crop&q=80" },
-  { id: 45, name: "Special Biryani (Full)", category_id: 7, price: 280, available: 1, image: "https://images.unsplash.com/photo-1633945274405-b6c8069047b0?w=500&auto=format&fit=crop&q=80" },
-  { id: 46, name: "Egg Biryani (Single)", category_id: 7, price: 120, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 47, name: "Egg Biryani (Full)", category_id: 7, price: 240, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 48, name: "Chicken Fry Piece Biryani (Single)", category_id: 7, price: 180, available: 1, image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=80" },
-  { id: 49, name: "Chicken Fry Piece Biryani (Full)", category_id: 7, price: 280, available: 1, image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=500&auto=format&fit=crop&q=80" },
-  { id: 50, name: "Fish Biryani (Single)", category_id: 7, price: 200, available: 1, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&auto=format&fit=crop&q=80" },
-  { id: 51, name: "Fish Biryani (Full)", category_id: 7, price: 320, available: 1, image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=500&auto=format&fit=crop&q=80" },
-  { id: 52, name: "Chicken Family Pack", category_id: 7, price: 480, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" },
-  { id: 53, name: "Bahubali Biryani", category_id: 7, price: 800, available: 1, image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80" }
+  { id: 42, name: "Hyderabad Dum Biryani (Single)", category_id: 7, price: 150, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 43, name: "Hyderabad Dum Biryani (Full)", category_id: 7, price: 240, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 44, name: "Special Biryani (Single)", category_id: 7, price: 180, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 45, name: "Special Biryani (Full)", category_id: 7, price: 280, available: 1, image: "/images/dishes/Hydrabad Dhum Biryani.png" },
+  { id: 46, name: "Egg Biryani (Single)", category_id: 7, price: 120, available: 1, image: "/images/dishes/Egg Biryani.png" },
+  { id: 47, name: "Egg Biryani (Full)", category_id: 7, price: 240, available: 1, image: "/images/dishes/Egg Biryani.png" },
+  { id: 48, name: "Chicken Fry Piece Biryani (Single)", category_id: 7, price: 180, available: 1, image: "/images/dishes/Chicken Fry Piece Biryani.png" },
+  { id: 49, name: "Chicken Fry Piece Biryani (Full)", category_id: 7, price: 280, available: 1, image: "/images/dishes/Chicken Fry Piece Biryani.png" },
+  { id: 50, name: "Fish Biryani (Single)", category_id: 7, price: 200, available: 1, image: "/images/dishes/Fish Biryani.png" },
+  { id: 51, name: "Fish Biryani (Full)", category_id: 7, price: 320, available: 1, image: "/images/dishes/Fish Biryani.png" },
+  { id: 52, name: "Chicken Family Pack", category_id: 7, price: 480, available: 1, image: "/images/dishes/Chicken Family Pack.png" },
+  { id: 53, name: "Bahubali Biryani", category_id: 7, price: 800, available: 1, image: "/images/dishes/Bahubali Biryani.png" },
+
+  // BEVERAGES & COOL DRINKS
+  { id: 54, name: "Water Bottle 1L", category_id: 8, price: 20, available: 1, image: "/images/dishes/Water Bottle.png" },
+  { id: 55, name: "Thums Up", category_id: 8, price: 20, available: 1, image: "/images/dishes/Thums Up.png" }
 ];
 
 const DEFAULT_SETTINGS = {
@@ -104,7 +109,7 @@ function setStorage(key, value) {
 }
 
 // Seed initial data or update to new menu version
-const MENU_VERSION = "v4_aj_billing";
+const MENU_VERSION = "v10_aj_billing";
 if (localStorage.getItem("rb_menu_ver") !== MENU_VERSION) {
   setStorage("rb_categories", DEFAULT_CATEGORIES);
   setStorage("rb_items", DEFAULT_ITEMS);
@@ -189,11 +194,11 @@ export async function editItem(id, data) {
   if (idx !== -1) {
     items[idx] = {
       ...items[idx],
-      name: data.name.trim(),
-      category_id: data.category_id ? Number(data.category_id) : null,
-      price: Number(data.price) || 0,
-      available: data.available ? 1 : 0,
-      image: data.image !== undefined ? data.image : items[idx].image
+      name: data.name ? data.name.trim() : items[idx].name,
+      category_id: data.category_id ? Number(data.category_id) : items[idx].category_id,
+      price: data.price !== undefined && data.price !== null && !isNaN(Number(data.price)) ? Number(data.price) : items[idx].price,
+      available: data.available !== undefined ? (data.available ? 1 : 0) : items[idx].available,
+      image: (data.image && typeof data.image === "string" && data.image.trim()) ? data.image.trim() : items[idx].image
     };
     setStorage("rb_items", items);
   }
@@ -205,6 +210,14 @@ export async function deleteItem(id) {
   items = items.filter(i => String(i.id) !== String(id));
   setStorage("rb_items", items);
   return { ok: true };
+}
+
+export function getCart() {
+  return getStorage("rb_cart", []);
+}
+
+export function saveCart(cart) {
+  setStorage("rb_cart", cart || []);
 }
 
 // Restaurant settings
@@ -353,7 +366,9 @@ export const api = {
   bill: getBill,
   deleteBill,
   daily: getSalesReport,
-  clearData
+  clearData,
+  getCart,
+  saveCart
 };
 
 export default api;
