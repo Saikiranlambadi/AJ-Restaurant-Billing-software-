@@ -384,14 +384,64 @@ function Toolbar({ title, search, setSearch, action, label }) { return <div clas
 function Modal({ title, onClose, children }) { return <div className="modal-bg" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="modal"><div className="modal-head"><h3>{title}</h3><button onClick={onClose}><X /></button></div>{children}</div></div> }
 
 function ReceiptContent({ bill, settings }) {
-  return <div className="receipt"><h2>{settings?.restaurant_name || "My Restaurant"}</h2><p>{settings?.address}</p><p>{settings?.phone}</p><hr /><div>Bill: {bill.bill_no}</div><div>{new Date(bill.created_at).toLocaleString()}</div><hr />{bill.items?.map((x, i) => <div className="rline" key={i}><span>{x.item_name} x{x.quantity}</span><span>{money(x.amount)}</span></div>)}<hr /><div className="rline bold"><span>TOTAL</span><span>{money(bill.total)}</span></div><div className="center">Payment: {bill.payment_method}</div><hr /><div className="center">Thank You! Visit Again</div></div>
+  const name = settings?.restaurant_name || "AJ Restaurant";
+  const address = settings?.address || "Main Road, Sudimalla,Telangana 507123";
+  const phone = settings?.phone || "9866330527";
+  const formattedPhone = (phone.includes("Ph") || phone.includes("Mob")) ? phone : `Ph: ${phone}`;
+
+  return (
+    <div className="receipt">
+      <h2>{name}</h2>
+      <p style={{ whiteSpace: "pre-line" }}>{address}</p>
+      <p>{formattedPhone}</p>
+      <hr />
+      <div>Bill: {bill.bill_no}</div>
+      <div>{new Date(bill.created_at).toLocaleString()}</div>
+      <hr />
+      {bill.items?.map((x, i) => (
+        <div className="rline" key={i}>
+          <span>{x.item_name} x{x.quantity}</span>
+          <span>{money(x.amount)}</span>
+        </div>
+      ))}
+      <hr />
+      <div className="rline bold">
+        <span>TOTAL</span>
+        <span>{money(bill.total)}</span>
+      </div>
+      <div className="center">Payment: {bill.payment_method}</div>
+      <hr />
+      <div className="center">Thank You! Visit Again</div>
+    </div>
+  );
 }
+
 function printReceipt(bill, settings) {
-  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{text-align:left}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${document.querySelector(".receipt-preview")?.innerHTML || buildReceiptHTML(bill, settings)}<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}<\/script></body></html>`;
+  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{text-align:left}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0;white-space:pre-line}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${buildReceiptHTML(bill, settings)}<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}<\/script></body></html>`;
   const w = window.open("", "_blank", "width=420,height=700"); if (!w) return alert("Please allow popups for printing."); w.document.write(html); w.document.close();
 }
+
 function buildReceiptHTML(bill, settings) {
-  return `<div class="receipt"><h2>${settings?.restaurant_name || "My Restaurant"}</h2><p>${settings?.address || ""}</p><p>${settings?.phone || ""}</p><hr/><div>Bill: ${bill.bill_no}</div><div>${new Date(bill.created_at).toLocaleString()}</div><hr/>${bill.items.map(x => `<div class="rline"><span>${x.item_name} x${x.quantity}</span><span>${money(x.amount)}</span></div>`).join("")}<hr/><div class="rline bold"><span>TOTAL</span><span>${money(bill.total)}</span></div><div class="center">Payment: ${bill.payment_method}</div><hr/><div class="center">Thank You! Visit Again</div></div>`;
+  const name = settings?.restaurant_name || "AJ Restaurant";
+  const address = settings?.address || "Main Road, Sudimalla,Telangana 507123";
+  const phone = settings?.phone || "9866330527";
+  const formattedPhone = (phone.includes("Ph") || phone.includes("Mob")) ? phone : `Ph: ${phone}`;
+
+  return `<div class="receipt">
+<h2>${name}</h2>
+<p style="white-space:pre-line;">${address}</p>
+<p>${formattedPhone}</p>
+<hr/>
+<div>Bill: ${bill.bill_no}</div>
+<div>${new Date(bill.created_at).toLocaleString()}</div>
+<hr/>
+${(bill.items || []).map(x => `<div class="rline"><span>${x.item_name} x${x.quantity}</span><span>${money(x.amount)}</span></div>`).join("")}
+<hr/>
+<div class="rline bold"><span>TOTAL</span><span>${money(bill.total)}</span></div>
+<div class="center">Payment: ${bill.payment_method}</div>
+<hr/>
+<div class="center">Thank You! Visit Again</div>
+</div>`;
 }
 function printTest(s) { const fake = { bill_no: "TEST", created_at: new Date().toISOString(), total: 0, payment_method: "TEST", items: [{ item_name: "Printer Test", quantity: 1, amount: 0 }] }; printReceipt(fake, s) }
 

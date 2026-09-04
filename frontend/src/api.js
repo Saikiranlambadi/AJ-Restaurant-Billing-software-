@@ -86,8 +86,8 @@ const DEFAULT_ITEMS = [
 
 const DEFAULT_SETTINGS = {
   restaurant_name: "AJ Restaurant",
-  address: "",
-  phone: "",
+  address: "Main Road, Sudimalla,Telangana 507123",
+  phone: "9866330527",
   paper_size: "80mm"
 };
 
@@ -109,11 +109,18 @@ function setStorage(key, value) {
 }
 
 // Seed initial data or update to new menu version
-const MENU_VERSION = "v10_aj_billing";
+const MENU_VERSION = "v11_aj_billing_address_update";
 if (localStorage.getItem("rb_menu_ver") !== MENU_VERSION) {
+  const current = getStorage("rb_settings", DEFAULT_SETTINGS);
+  const updatedSettings = {
+    ...DEFAULT_SETTINGS,
+    ...current,
+    address: current?.address || DEFAULT_SETTINGS.address,
+    phone: current?.phone || DEFAULT_SETTINGS.phone
+  };
   setStorage("rb_categories", DEFAULT_CATEGORIES);
   setStorage("rb_items", DEFAULT_ITEMS);
-  setStorage("rb_settings", DEFAULT_SETTINGS);
+  setStorage("rb_settings", updatedSettings);
   setStorage("rb_menu_ver", MENU_VERSION);
 }
 
@@ -222,7 +229,13 @@ export function saveCart(cart) {
 
 // Restaurant settings
 export async function getSettings() {
-  return getStorage("rb_settings", DEFAULT_SETTINGS);
+  const current = getStorage("rb_settings", DEFAULT_SETTINGS);
+  return {
+    restaurant_name: current?.restaurant_name || DEFAULT_SETTINGS.restaurant_name,
+    address: current?.address || DEFAULT_SETTINGS.address,
+    phone: current?.phone || DEFAULT_SETTINGS.phone,
+    paper_size: current?.paper_size || DEFAULT_SETTINGS.paper_size
+  };
 }
 
 export async function saveSettings(data) {
