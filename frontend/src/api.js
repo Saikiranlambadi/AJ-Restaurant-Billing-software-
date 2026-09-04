@@ -86,8 +86,8 @@ const DEFAULT_ITEMS = [
 
 const DEFAULT_SETTINGS = {
   restaurant_name: "AJ Restaurant",
-  address: "Main Road, Sudimalla,Telangana 507123",
-  phone: "9866330527",
+  address: "Main Road, Sudimalla, Telangana – 507123",
+  phone: "📞 9866330527",
   paper_size: "80mm"
 };
 
@@ -140,7 +140,7 @@ function setStorage(key, value) {
 })();
 
 // Seed initial data or update to new menu version
-const MENU_VERSION = "v20_aj_billing_address_force";
+const MENU_VERSION = "v21_aj_billing_header_compact";
 if (localStorage.getItem("rb_menu_ver") !== MENU_VERSION) {
   setStorage("rb_categories", DEFAULT_CATEGORIES);
   setStorage("rb_items", DEFAULT_ITEMS);

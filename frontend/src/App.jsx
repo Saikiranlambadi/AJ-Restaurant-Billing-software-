@@ -416,9 +416,9 @@ function Modal({ title, onClose, children }) { return <div className="modal-bg" 
 
 function getHeaderDetails(bill, settings) {
   const name = (bill?.restaurant_name && bill.restaurant_name.trim()) || (settings?.restaurant_name && settings.restaurant_name.trim()) || "AJ Restaurant";
-  const address = (bill?.address && bill.address.trim()) || (settings?.address && settings.address.trim()) || "Main Road, Sudimalla,Telangana 507123";
+  const address = (bill?.address && bill.address.trim()) || (settings?.address && settings.address.trim()) || "Main Road, Sudimalla, Telangana – 507123";
   const rawPhone = (bill?.phone && bill.phone.trim()) || (settings?.phone && settings.phone.trim()) || "9866330527";
-  const phone = (rawPhone.includes("Ph") || rawPhone.includes("Mob")) ? rawPhone : `Ph: ${rawPhone}`;
+  const phone = rawPhone.includes("📞") ? rawPhone : (rawPhone.includes("Ph") || rawPhone.includes("Mob")) ? rawPhone : `📞 ${rawPhone}`;
   return { name, address, phone };
 }
 
