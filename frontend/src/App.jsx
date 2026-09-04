@@ -85,6 +85,33 @@ function LoginPage({ onLoginSuccess }) {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("Navigation error caught:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: "40px 20px", textAlign: "center", background: "#fff", borderRadius: "16px", margin: "20px auto", maxWidth: "600px", border: "1px solid #fee2e2" }}>
+          <h2 style={{ color: "#dc2626", marginBottom: "8px" }}>⚠️ Something went wrong</h2>
+          <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "20px" }}>{this.state.error?.message || "An unexpected rendering error occurred."}</p>
+          <button className="primary" onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [user, setUser] = useState(() => api.getCurrentUser());
   const [page, setPage] = useState("billing");
@@ -131,13 +158,15 @@ function App() {
         </div>
       </header>
       <div className="content">
-        {page === "dashboard" && <Dashboard go={setPage} />}
-        {page === "billing" && <Billing />}
-        {page === "items" && <Items />}
-        {page === "categories" && <Categories />}
-        {page === "history" && <HistoryPage />}
-        {page === "reports" && <Reports />}
-        {page === "settings" && <SettingsPage />}
+        <ErrorBoundary key={page}>
+          {page === "dashboard" && <Dashboard go={setPage} />}
+          {page === "billing" && <Billing />}
+          {page === "items" && <Items />}
+          {page === "categories" && <Categories />}
+          {page === "history" && <HistoryPage />}
+          {page === "reports" && <Reports />}
+          {page === "settings" && <SettingsPage />}
+        </ErrorBoundary>
       </div>
     </main>
   </div>
@@ -145,14 +174,14 @@ function App() {
 
 function Dashboard({ go }) {
   const [data, setData] = useState(null);
-  useEffect(() => { api.daily().then(setData) }, []);
+  useEffect(() => { api.daily().then(setData).catch(console.error) }, []);
   return <div>
     <div className="welcome"><div><h1>Good morning 👋</h1><p>Manage today's restaurant sales quickly.</p></div><button className="primary" onClick={() => go("billing")}><Plus size={18} /> New Bill</button></div>
     <div className="stats">
-      <Stat title="Today's Sales" value={money(data?.summary.total)} icon="₹" />
-      <Stat title="Total Bills" value={data?.summary.bills || 0} icon="🧾" />
-      <Stat title="Cash Sales" value={money(data?.summary.cash)} icon="💵" />
-      <Stat title="UPI Sales" value={money(data?.summary.upi)} icon="📱" />
+      <Stat title="Today's Sales" value={money(data?.summary?.total)} icon="₹" />
+      <Stat title="Total Bills" value={data?.summary?.bills || 0} icon="🧾" />
+      <Stat title="Cash Sales" value={money(data?.summary?.cash)} icon="💵" />
+      <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="📱" />
     </div>
     <div className="panel"><div className="panel-title"><h3>Top Selling Items</h3></div>
       <div className="table-wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Sales</th></tr></thead>
@@ -313,7 +342,7 @@ function Billing() {
 
 function Items() {
   const [items, setItems] = useState([]), [cats, setCats] = useState([]), [editing, setEditing] = useState(null), [show, setShow] = useState(false), [search, setSearch] = useState("");
-  const load = () => Promise.all([api.items(), api.categories()]).then(([i, c]) => { setItems(i); setCats(c) });
+  const load = () => Promise.all([api.items(), api.categories()]).then(([i, c]) => { setItems(i || []); setCats(c || []) }).catch(console.error);
   useEffect(load, []);
   const save = async e => {
     e.preventDefault();
@@ -330,24 +359,24 @@ function Items() {
     setEditing(null);
     load();
   };
-  const list = items.filter(x => x.name.toLowerCase().includes(search.toLowerCase()));
+  const list = (items || []).filter(x => (x?.name || "").toLowerCase().includes((search || "").toLowerCase()));
   return <div><Toolbar title="Food Items" search={search} setSearch={setSearch} action={() => { setEditing(null); setShow(true) }} label="Add Item" />
     <div className="panel table-wrap"><table><thead><tr><th>Image</th><th>Item</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>{list.map(x => <tr key={x.id}><td><img src={x.image || "/images/food-placeholder.jpg"} alt={x.name} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} /></td><td><b>{x.name}</b></td><td>{x.category_name || "Uncategorized"}</td><td>{money(x.price)}</td><td><span className={x.available ? "badge success" : "badge"}>{x.available ? "Available" : "Unavailable"}</span></td><td className="actions"><button onClick={() => { setEditing(x); setShow(true) }}><Pencil size={16} /></button><button onClick={async () => { if (confirm("Delete item?")) { await api.deleteItem(x.id); load() } }}><Trash2 size={16} /></button></td></tr>)}</tbody></table></div>
-    {show && <Modal title={editing ? "Edit Item" : "Add Food Item"} onClose={() => { setShow(false); setEditing(null) }}><form onSubmit={save} className="form"><label>Item Name<input name="name" defaultValue={editing?.name || ""} required /></label><label>Category<select name="category_id" defaultValue={editing?.category_id || ""}><option value="">Select category</option>{cats.map(c => <option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label>Price<input name="price" type="number" step="0.01" min="0" defaultValue={editing?.price || ""} required /></label><label>Image URL<input name="image" defaultValue={editing?.image || ""} placeholder="https://images.unsplash.com/..." /></label><label className="check"><input name="available" type="checkbox" defaultChecked={editing ? !!editing.available : true} /> Available</label><button className="primary"><Save size={17} /> Save Item</button></form></Modal>}</div>
+    {show && <Modal title={editing ? "Edit Item" : "Add Food Item"} onClose={() => { setShow(false); setEditing(null) }}><form onSubmit={save} className="form"><label>Item Name<input name="name" defaultValue={editing?.name || ""} required /></label><label>Category<select name="category_id" defaultValue={editing?.category_id || ""}><option value="">Select category</option>{(cats || []).map(c => <option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label>Price<input name="price" type="number" step="0.01" min="0" defaultValue={editing?.price || ""} required /></label><label>Image URL<input name="image" defaultValue={editing?.image || ""} placeholder="https://images.unsplash.com/..." /></label><label className="check"><input name="available" type="checkbox" defaultChecked={editing ? !!editing.available : true} /> Available</label><button className="primary"><Save size={17} /> Save Item</button></form></Modal>}</div>
 }
 
 function Categories() {
   const [cats, setCats] = useState([]), [name, setName] = useState(""), [editing, setEditing] = useState(null);
-  const load = () => api.categories().then(setCats); useEffect(load, []);
+  const load = () => api.categories().then(c => setCats(c || [])).catch(console.error); useEffect(load, []);
   async function save() { if (!name.trim()) return; if (editing) await api.editCategory(editing.id, name); else await api.addCategory(name); setName(""); setEditing(null); load() }
   return <div><div className="panel category-add"><div><h3>{editing ? "Edit Category" : "Add Category"}</h3><p>Create menu categories.</p></div><div className="inline-form"><input placeholder="Category name" value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === "Enter" && save()} /><button className="primary" onClick={save}><Plus size={17} />{editing ? "Update" : "Add"}</button>{editing && <button className="secondary" onClick={() => { setEditing(null); setName("") }}><X size={17} /></button>}</div></div>
-    <div className="category-grid">{cats.map(c => <div className="category-card" key={c.id}><span>🏷️</span><div><b>{c.name}</b><small>Menu category</small></div><div className="actions"><button onClick={() => { setEditing(c); setName(c.name) }}><Pencil size={16} /></button><button onClick={async () => { if (confirm("Delete category?")) { await api.deleteCategory(c.id); load() } }}><Trash2 size={16} /></button></div></div>)}</div></div>
+    <div className="category-grid">{(cats || []).map(c => <div className="category-card" key={c.id}><span>🏷️</span><div><b>{c.name}</b><small>Menu category</small></div><div className="actions"><button onClick={() => { setEditing(c); setName(c.name) }}><Pencil size={16} /></button><button onClick={async () => { if (confirm("Delete category?")) { await api.deleteCategory(c.id); load() } }}><Trash2 size={16} /></button></div></div>)}</div></div>
 }
 
 function HistoryPage() {
   const [bills, setBills] = useState([]), [search, setSearch] = useState(""), [selected, setSelected] = useState(null);
-  const load = () => api.bills().then(setBills); useEffect(load, []);
-  const list = bills.filter(x => x.bill_no.toLowerCase().includes(search.toLowerCase()));
+  const load = () => api.bills().then(b => setBills(b || [])).catch(console.error); useEffect(load, []);
+  const list = (bills || []).filter(x => (x?.bill_no || "").toLowerCase().includes((search || "").toLowerCase()));
   return <div><Toolbar title="Bill History" search={search} setSearch={setSearch} />
     <div className="panel table-wrap"><table><thead><tr><th>Bill No.</th><th>Date & Time</th><th>Payment</th><th>Amount</th><th>Action</th></tr></thead><tbody>{list.map(x => <tr key={x.id}><td><b>{x.bill_no}</b></td><td>{new Date(x.created_at).toLocaleString()}</td><td>{x.payment_method}</td><td>{money(x.total)}</td><td><button className="view-btn" onClick={async () => setSelected(await api.bill(x.id))}>View / Reprint</button></td></tr>)}</tbody></table></div>
     {selected && <BillModal bill={selected} onClose={() => setSelected(null)} />}</div>
@@ -356,8 +385,8 @@ function HistoryPage() {
 function BillModal({ bill, onClose }) { const [s, setS] = useState(null); useEffect(() => api.settings().then(setS), []); return <Modal title={`Bill ${bill.bill_no}`} onClose={onClose}><div className="receipt-preview"><ReceiptContent bill={bill} settings={s} /></div><button className="primary full" onClick={() => printReceipt(bill, s)}><Printer size={17} /> Reprint Bill</button></Modal> }
 
 function Reports() {
-  const [data, setData] = useState(null); useEffect(() => { api.daily().then(setData) }, []);
-  return <div><div className="report-header"><div><h1>Today's Report</h1><p>Sales summary for today.</p></div><button className="secondary" onClick={() => window.print()}>Print Report</button></div><div className="stats"><Stat title="Total Sales" value={money(data?.summary.total)} icon="₹" /><Stat title="Bills" value={data?.summary.bills || 0} icon="🧾" /><Stat title="Cash" value={money(data?.summary.cash)} icon="💵" /><Stat title="UPI" value={money(data?.summary.upi)} icon="📱" /></div><div className="panel"><div className="panel-title"><h3>Top Selling Items</h3></div><div className="table-wrap"><table><thead><tr><th>Item</th><th>Qty Sold</th><th>Sales</th></tr></thead><tbody>{(data?.top || []).map(x => <tr key={x.name}><td>{x.name}</td><td>{x.quantity}</td><td>{money(x.amount)}</td></tr>)}</tbody></table></div></div></div>
+  const [data, setData] = useState(null); useEffect(() => { api.daily().then(setData).catch(console.error) }, []);
+  return <div><div className="report-header"><div><h1>Today's Report</h1><p>Sales summary for today.</p></div><button className="secondary" onClick={() => window.print()}>Print Report</button></div><div className="stats"><Stat title="Total Sales" value={money(data?.summary?.total)} icon="₹" /><Stat title="Bills" value={data?.summary?.bills || 0} icon="🧾" /><Stat title="Cash" value={money(data?.summary?.cash)} icon="💵" /><Stat title="UPI" value={money(data?.summary?.upi)} icon="📱" /></div><div className="panel"><div className="panel-title"><h3>Top Selling Items</h3></div><div className="table-wrap"><table><thead><tr><th>Item</th><th>Qty Sold</th><th>Sales</th></tr></thead><tbody>{(data?.top || []).map(x => <tr key={x.name}><td>{x.name}</td><td>{x.quantity}</td><td>{money(x.amount)}</td></tr>)}</tbody></table></div></div></div>
 }
 
 function SettingsPage() {
