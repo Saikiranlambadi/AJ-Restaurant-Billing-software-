@@ -250,9 +250,11 @@ function Billing() {
       };
       const bill = await api.createBill(billData);
       const full = await api.bill(bill.id);
+      const latestSettings = await api.settings();
+      setSettings(latestSettings);
       setCart([]);
       setPayment("Cash");
-      printReceipt(full, settings);
+      printReceipt(full, latestSettings);
     } catch (e) { alert(e.message) } finally { setSaving(false) }
   }
 
