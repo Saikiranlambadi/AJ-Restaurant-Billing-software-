@@ -250,10 +250,9 @@ function Billing() {
       };
       const bill = await api.createBill(billData);
       const full = await api.bill(bill.id);
-      const freshSettings = await api.settings();
       setCart([]);
       setPayment("Cash");
-      printReceipt(full, freshSettings);
+      printReceipt(full, settings);
     } catch (e) { alert(e.message) } finally { setSaving(false) }
   }
 
@@ -384,20 +383,22 @@ function Toolbar({ title, search, setSearch, action, label }) { return <div clas
 
 function Modal({ title, onClose, children }) { return <div className="modal-bg" onMouseDown={e => e.target === e.currentTarget && onClose()}><div className="modal"><div className="modal-head"><h3>{title}</h3><button onClick={onClose}><X /></button></div>{children}</div></div> }
 
-function ReceiptContent({ bill, settings }) {
-  const defaultAddress = "Main Road, Sudimalla,Telangana 507123";
-  const defaultPhone = "9866330527";
+function getHeaderDetails(bill, settings) {
+  const name = (bill?.restaurant_name && bill.restaurant_name.trim()) || (settings?.restaurant_name && settings.restaurant_name.trim()) || "AJ Restaurant";
+  const address = (bill?.address && bill.address.trim()) || (settings?.address && settings.address.trim()) || "Main Road, Sudimalla,Telangana 507123";
+  const rawPhone = (bill?.phone && bill.phone.trim()) || (settings?.phone && settings.phone.trim()) || "9866330527";
+  const phone = (rawPhone.includes("Ph") || rawPhone.includes("Mob")) ? rawPhone : `Ph: ${rawPhone}`;
+  return { name, address, phone };
+}
 
-  const name = (settings?.restaurant_name && settings.restaurant_name.trim()) ? settings.restaurant_name : "AJ Restaurant";
-  const address = (settings?.address && settings.address.trim()) ? settings.address.trim() : defaultAddress;
-  const phone = (settings?.phone && settings.phone.trim()) ? settings.phone.trim() : defaultPhone;
-  const formattedPhone = (phone.includes("Ph") || phone.includes("Mob")) ? phone : `Ph: ${phone}`;
+function ReceiptContent({ bill, settings }) {
+  const { name, address, phone } = getHeaderDetails(bill, settings);
 
   return (
     <div className="receipt">
       <h2>{name}</h2>
-      <p style={{ whiteSpace: "pre-line", textAlign: "center", margin: "2px 0" }}>{address}</p>
-      <p style={{ textAlign: "center", margin: "2px 0" }}>{formattedPhone}</p>
+      <p style={{ whiteSpace: "pre-line" }}>{address}</p>
+      <p>{phone}</p>
       <hr />
       <div>Bill: {bill.bill_no}</div>
       <div>{new Date(bill.created_at).toLocaleString()}</div>
@@ -426,18 +427,12 @@ function printReceipt(bill, settings) {
 }
 
 function buildReceiptHTML(bill, settings) {
-  const defaultAddress = "Main Road, Sudimalla,Telangana 507123";
-  const defaultPhone = "9866330527";
-
-  const name = (settings?.restaurant_name && settings.restaurant_name.trim()) ? settings.restaurant_name : "AJ Restaurant";
-  const address = (settings?.address && settings.address.trim()) ? settings.address.trim() : defaultAddress;
-  const phone = (settings?.phone && settings.phone.trim()) ? settings.phone.trim() : defaultPhone;
-  const formattedPhone = (phone.includes("Ph") || phone.includes("Mob")) ? phone : `Ph: ${phone}`;
+  const { name, address, phone } = getHeaderDetails(bill, settings);
 
   return `<div class="receipt">
 <h2>${name}</h2>
-<p style="text-align:center;margin:2px 0;white-space:pre-line;">${address}</p>
-<p style="text-align:center;margin:2px 0;">${formattedPhone}</p>
+<p style="white-space:pre-line;">${address}</p>
+<p>${phone}</p>
 <hr/>
 <div>Bill: ${bill.bill_no}</div>
 <div>${new Date(bill.created_at).toLocaleString()}</div>
