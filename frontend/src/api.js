@@ -108,19 +108,43 @@ function setStorage(key, value) {
   }
 }
 
+// Force enforce valid address and phone on rb_settings in localStorage on load
+(function enforceDefaultSettings() {
+  try {
+    const raw = localStorage.getItem("rb_settings");
+    let parsed = raw ? JSON.parse(raw) : {};
+    let changed = false;
+    
+    if (!parsed || typeof parsed !== "object") {
+      parsed = { ...DEFAULT_SETTINGS };
+      changed = true;
+    }
+    if (!parsed.restaurant_name || !parsed.restaurant_name.trim()) {
+      parsed.restaurant_name = DEFAULT_SETTINGS.restaurant_name;
+      changed = true;
+    }
+    if (!parsed.address || !parsed.address.trim()) {
+      parsed.address = DEFAULT_SETTINGS.address;
+      changed = true;
+    }
+    if (!parsed.phone || !parsed.phone.trim()) {
+      parsed.phone = DEFAULT_SETTINGS.phone;
+      changed = true;
+    }
+    if (changed || !raw) {
+      localStorage.setItem("rb_settings", JSON.stringify(parsed));
+    }
+  } catch (e) {
+    localStorage.setItem("rb_settings", JSON.stringify(DEFAULT_SETTINGS));
+  }
+})();
+
 // Seed initial data or update to new menu version
-const MENU_VERSION = "v11_aj_billing_address_update";
+const MENU_VERSION = "v20_aj_billing_address_force";
 if (localStorage.getItem("rb_menu_ver") !== MENU_VERSION) {
-  const current = getStorage("rb_settings", DEFAULT_SETTINGS);
-  const updatedSettings = {
-    ...DEFAULT_SETTINGS,
-    ...current,
-    address: current?.address || DEFAULT_SETTINGS.address,
-    phone: current?.phone || DEFAULT_SETTINGS.phone
-  };
   setStorage("rb_categories", DEFAULT_CATEGORIES);
   setStorage("rb_items", DEFAULT_ITEMS);
-  setStorage("rb_settings", updatedSettings);
+  setStorage("rb_settings", DEFAULT_SETTINGS);
   setStorage("rb_menu_ver", MENU_VERSION);
 }
 
