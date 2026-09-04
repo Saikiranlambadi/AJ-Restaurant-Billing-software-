@@ -4,12 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "npm install --prefix frontend",
     "dev": "npm run dev --prefix frontend",
-    "build": "npm install --prefix frontend && npm run build --prefix frontend",
+    "build": "cd frontend && npm install && npm run build",
     "preview": "npm run preview --prefix frontend"
-  },
-  "allowScripts": [
-    "esbuild"
-  ]
+  }
 }
