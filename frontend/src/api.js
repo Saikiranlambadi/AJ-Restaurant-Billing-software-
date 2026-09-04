@@ -91,6 +91,26 @@ const DEFAULT_SETTINGS = {
   paper_size: "80mm"
 };
 
+function normalizeSettings(s) {
+  const address = (s && typeof s.address === "string" && s.address.trim())
+    ? s.address.trim()
+    : DEFAULT_SETTINGS.address;
+  const phone = (s && typeof s.phone === "string" && s.phone.trim())
+    ? s.phone.trim()
+    : DEFAULT_SETTINGS.phone;
+  const restaurant_name = (s && typeof s.restaurant_name === "string" && s.restaurant_name.trim())
+    ? s.restaurant_name.trim()
+    : DEFAULT_SETTINGS.restaurant_name;
+  const paper_size = s?.paper_size || DEFAULT_SETTINGS.paper_size;
+
+  return {
+    restaurant_name,
+    address,
+    phone,
+    paper_size
+  };
+}
+
 function getStorage(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -109,15 +129,10 @@ function setStorage(key, value) {
 }
 
 // Seed initial data or update to new menu version
-const MENU_VERSION = "v11_aj_billing_address_update";
+const MENU_VERSION = "v12_aj_billing_address_force";
 if (localStorage.getItem("rb_menu_ver") !== MENU_VERSION) {
   const current = getStorage("rb_settings", DEFAULT_SETTINGS);
-  const updatedSettings = {
-    ...DEFAULT_SETTINGS,
-    ...current,
-    address: current?.address || DEFAULT_SETTINGS.address,
-    phone: current?.phone || DEFAULT_SETTINGS.phone
-  };
+  const updatedSettings = normalizeSettings(current);
   setStorage("rb_categories", DEFAULT_CATEGORIES);
   setStorage("rb_items", DEFAULT_ITEMS);
   setStorage("rb_settings", updatedSettings);
@@ -130,9 +145,11 @@ if (!localStorage.getItem("rb_categories")) {
 if (!localStorage.getItem("rb_items")) {
   setStorage("rb_items", DEFAULT_ITEMS);
 }
-if (!localStorage.getItem("rb_settings")) {
-  setStorage("rb_settings", DEFAULT_SETTINGS);
-}
+
+// Always ensure rb_settings has valid address & phone
+const storedSettings = getStorage("rb_settings", null);
+setStorage("rb_settings", normalizeSettings(storedSettings));
+
 if (!localStorage.getItem("rb_bills")) {
   setStorage("rb_bills", []);
 }
@@ -229,18 +246,15 @@ export function saveCart(cart) {
 
 // Restaurant settings
 export async function getSettings() {
-  const current = getStorage("rb_settings", DEFAULT_SETTINGS);
-  return {
-    restaurant_name: current?.restaurant_name || DEFAULT_SETTINGS.restaurant_name,
-    address: current?.address || DEFAULT_SETTINGS.address,
-    phone: current?.phone || DEFAULT_SETTINGS.phone,
-    paper_size: current?.paper_size || DEFAULT_SETTINGS.paper_size
-  };
+  const current = getStorage("rb_settings", null);
+  const normalized = normalizeSettings(current);
+  setStorage("rb_settings", normalized);
+  return normalized;
 }
 
 export async function saveSettings(data) {
   const current = await getSettings();
-  const updated = { ...current, ...data };
+  const updated = normalizeSettings({ ...current, ...data });
   setStorage("rb_settings", updated);
   return updated;
 }
