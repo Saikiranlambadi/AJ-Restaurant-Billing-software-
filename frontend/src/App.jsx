@@ -427,33 +427,36 @@ function ReceiptContent({ bill, settings }) {
 
   return (
     <div className="receipt">
-      <h2>{name}</h2>
-      <p style={{ whiteSpace: "pre-line" }}>{address}</p>
-      <p>{phone}</p>
-      <hr />
-      <div>Bill: {bill.bill_no}</div>
-      <div>{new Date(bill.created_at).toLocaleString()}</div>
-      <hr />
-      {bill.items?.map((x, i) => (
-        <div className="rline" key={i}>
-          <span>{x.item_name} x{x.quantity}</span>
-          <span>{money(x.amount)}</span>
+      <div className="watermark">AJ</div>
+      <div className="receipt-content">
+        <h2>{name}</h2>
+        <p style={{ whiteSpace: "pre-line" }}>{address}</p>
+        <p>{phone}</p>
+        <hr />
+        <div>Bill: {bill.bill_no}</div>
+        <div>{new Date(bill.created_at).toLocaleString()}</div>
+        <hr />
+        {bill.items?.map((x, i) => (
+          <div className="rline" key={i}>
+            <span>{x.item_name} x{x.quantity}</span>
+            <span>{money(x.amount)}</span>
+          </div>
+        ))}
+        <hr />
+        <div className="rline bold">
+          <span>TOTAL</span>
+          <span>{money(bill.total)}</span>
         </div>
-      ))}
-      <hr />
-      <div className="rline bold">
-        <span>TOTAL</span>
-        <span>{money(bill.total)}</span>
+        <div className="center">Payment: {bill.payment_method}</div>
+        <hr />
+        <div className="center">Thank You! Visit Again</div>
       </div>
-      <div className="center">Payment: {bill.payment_method}</div>
-      <hr />
-      <div className="center">Thank You! Visit Again</div>
     </div>
   );
 }
 
 function printReceipt(bill, settings) {
-  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{text-align:left}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0;white-space:pre-line}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${buildReceiptHTML(bill, settings)}<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close()}<\/script></body></html>`;
+  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&display=swap');@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{position:relative;text-align:left;background:#fff;overflow:hidden;padding:10px 5px}.watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.03;pointer-events:none;z-index:0;user-select:none;font-family:'Inter',Arial,sans-serif;font-size:110px;font-weight:200;color:#000;white-space:nowrap;letter-spacing:15px}.receipt-content{position:relative;z-index:1}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0;white-space:pre-line}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${buildReceiptHTML(bill, settings)}<script>window.onload=()=>{setTimeout(()=>{window.print();window.onafterprint=()=>window.close()},200)}<\/script></body></html>`;
   const w = window.open("", "_blank", "width=420,height=700"); if (!w) return alert("Please allow popups for printing."); w.document.write(html); w.document.close();
 }
 
@@ -461,6 +464,8 @@ function buildReceiptHTML(bill, settings) {
   const { name, address, phone } = getHeaderDetails(bill, settings);
 
   return `<div class="receipt">
+<div class="watermark">AJ</div>
+<div class="receipt-content">
 <h2>${name}</h2>
 <p style="white-space:pre-line;">${address}</p>
 <p>${phone}</p>
@@ -474,6 +479,7 @@ ${(bill.items || []).map(x => `<div class="rline"><span>${x.item_name} x${x.quan
 <div class="center">Payment: ${bill.payment_method}</div>
 <hr/>
 <div class="center">Thank You! Visit Again</div>
+</div>
 </div>`;
 }
 function printTest(s) { const fake = { bill_no: "TEST", created_at: new Date().toISOString(), total: 0, payment_method: "TEST", items: [{ item_name: "Printer Test", quantity: 1, amount: 0 }] }; printReceipt(fake, s) }
