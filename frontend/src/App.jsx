@@ -145,7 +145,7 @@ function App() {
     <main className="main">
       <header className="topbar">
         <button className="icon-btn mobile-menu" onClick={() => setMobile(true)}><Menu /></button>
-        <div><h2>{nav.find(x => x[0] === page)?.[1]}</h2><span>{new Date().toLocaleDateString()}</span></div>
+        <div><h2>{nav.find(x => x[0] === page)?.[1]}</h2><span>{(() => { const d = new Date(); const dd = String(d.getDate()).padStart(2,'0'); const mm = String(d.getMonth()+1).padStart(2,'0'); const yyyy = d.getFullYear(); return `${dd}-${mm}-${yyyy}`; })()}</span></div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button className="avatar" title={`Logged in as ${user.name} (${user.role})`}>AJ</button>
           <div style={{ display: "flex", flexDirection: "column", fontSize: "13px", lineHeight: "1.2" }}>
@@ -174,21 +174,203 @@ function App() {
 
 function Dashboard({ go }) {
   const [data, setData] = useState(null);
-  useEffect(() => { api.daily().then(setData).catch(console.error) }, []);
-  return <div>
-    <div className="welcome"><div><h1>Good morning 👋</h1><p>Manage today's restaurant sales quickly.</p></div><button className="primary" onClick={() => go("billing")}><Plus size={18} /> New Bill</button></div>
-    <div className="stats">
-      <Stat title="Today's Sales" value={money(data?.summary?.total)} icon="₹" />
-      <Stat title="Total Bills" value={data?.summary?.bills || 0} icon="🧾" />
-      <Stat title="Cash Sales" value={money(data?.summary?.cash)} icon="💵" />
-      <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="📱" />
+  const [bills, setBills] = useState([]);
+  const [expanded, setExpanded] = useState({});
+  const [dropdown, setDropdown] = useState(null); // bill.id of open dropdown
+  const [viewBill, setViewBill] = useState(null); // bill to show in modal
+
+  useEffect(() => {
+    api.daily().then(setData).catch(console.error);
+    api.bills().then(allBills => {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const todayBills = (allBills || []).filter(b => b.created_at && b.created_at.slice(0, 10) === todayStr);
+      setBills(todayBills);
+    }).catch(console.error);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!dropdown) return;
+    const close = () => setDropdown(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, [dropdown]);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  })();
+
+  return (
+    <div>
+      <div className="welcome">
+        <div><h1>{greeting} 👋</h1><p>Manage today's restaurant sales quickly.</p></div>
+        <button className="primary" onClick={() => go("billing")}><Plus size={18} /> New Bill</button>
+      </div>
+      <div className="stats">
+        <Stat title="Today's Sales" value={money(data?.summary?.total)} icon="₹" />
+        <Stat title="Total Bills" value={data?.summary?.bills || 0} icon="🧾" />
+        <Stat title="Cash Sales" value={money(data?.summary?.cash)} icon="💵" />
+        <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="📱" />
+      </div>
+
+      {/* Today's Orders List */}
+      <div className="panel" style={{ marginBottom: "18px" }}>
+        <div className="panel-title" style={{ marginBottom: "14px" }}>
+          <h3 style={{ margin: 0 }}>📋 Today's Orders ({bills.length})</h3>
+        </div>
+        {bills.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "30px 20px", color: "#9aa4b4" }}>
+            <Receipt size={36} style={{ opacity: 0.4, marginBottom: "8px" }} />
+            <p style={{ margin: 0 }}>No orders printed today yet.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {bills.map((bill, idx) => (
+              <div key={bill.id} style={{ border: "1px solid #e7ebf2", borderRadius: "10px", overflow: "visible", background: "#fff" }}>
+
+                {/* Order Header Row */}
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "14px 16px", background: expanded[bill.id] ? "#f0f5ff" : "#fafbfc",
+                  borderRadius: expanded[bill.id] ? "10px 10px 0 0" : "10px", gap: "12px"
+                }}>
+                  {/* Left: number badge + info */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      width: "36px", height: "36px", borderRadius: "50%",
+                      background: "#246bfe", color: "#fff",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, fontSize: "14px", flexShrink: 0
+                    }}>
+                      {bills.length - idx}
+                    </div>
+                    <div style={{ textAlign: "left", minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: "14px", color: "#1b2537" }}>
+                        Order {bills.length - idx}&nbsp;
+                        <span style={{ fontSize: "12px", fontWeight: 400, color: "#8492a6" }}>#{bill.bill_no}</span>
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#8492a6", marginTop: "2px" }}>
+                        {new Date(bill.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        &nbsp;·&nbsp;{bill.payment_method}
+                        &nbsp;·&nbsp;{(bill.items || []).length} item{bill.items?.length !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: total + 3-dots */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+                    <span style={{ fontWeight: 700, fontSize: "16px", color: "#246bfe" }}>
+                      {money(bill.total)}
+                    </span>
+
+                    {/* 3-dots dropdown */}
+                    <div style={{ position: "relative" }}>
+                      <button
+                        onClick={e => { e.stopPropagation(); setDropdown(dropdown === bill.id ? null : bill.id); }}
+                        style={{
+                          width: "32px", height: "32px", borderRadius: "8px",
+                          background: dropdown === bill.id ? "#e8edf5" : "#f1f4f8",
+                          border: 0, cursor: "pointer", display: "flex", alignItems: "center",
+                          justifyContent: "center", fontSize: "18px", color: "#536174",
+                          letterSpacing: "1px", fontWeight: 700, transition: "background 0.15s"
+                        }}
+                        title="More options"
+                      >
+                        ···
+                      </button>
+
+                      {dropdown === bill.id && (
+                        <div
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            position: "absolute", right: 0, top: "38px", zIndex: 100,
+                            background: "#fff", border: "1px solid #e2e8f0",
+                            borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                            minWidth: "160px", overflow: "hidden"
+                          }}
+                        >
+                          <button
+                            onClick={() => {
+                              setDropdown(null);
+                              api.settings().then(s => printReceipt(bill, s));
+                            }}
+                            style={{
+                              width: "100%", display: "flex", alignItems: "center", gap: "10px",
+                              padding: "11px 14px", border: 0, background: "transparent",
+                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "#1b2537",
+                              textAlign: "left", transition: "background 0.12s"
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#f0f5ff"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          >
+                            <Printer size={15} /> Print Again
+                          </button>
+                          <div style={{ height: "1px", background: "#f0f2f5" }} />
+                          <button
+                            onClick={() => {
+                              setDropdown(null);
+                              setExpanded(prev => ({ ...prev, [bill.id]: !prev[bill.id] }));
+                            }}
+                            style={{
+                              width: "100%", display: "flex", alignItems: "center", gap: "10px",
+                              padding: "11px 14px", border: 0, background: "transparent",
+                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "#1b2537",
+                              textAlign: "left", transition: "background 0.12s"
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = "#f0f5ff"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          >
+                            <Receipt size={15} /> {expanded[bill.id] ? "Hide Details" : "View Details"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded items list */}
+                {expanded[bill.id] && (
+                  <div style={{ padding: "0 16px 14px", borderTop: "1px solid #edf0f5" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
+                      <thead>
+                        <tr>
+                          <th style={{ textAlign: "left", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Item</th>
+                          <th style={{ textAlign: "center", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Qty</th>
+                          <th style={{ textAlign: "right", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(bill.items || []).map((item, i) => (
+                          <tr key={i} style={{ background: i % 2 === 0 ? "#fafbfc" : "#fff" }}>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", color: "#2d3748", fontWeight: 500, borderBottom: "1px solid #f0f2f5" }}>{item.item_name}</td>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "center", color: "#4a5568", borderBottom: "1px solid #f0f2f5" }}>× {item.quantity}</td>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "right", fontWeight: 600, color: "#246bfe", borderBottom: "1px solid #f0f2f5" }}>{money(item.amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan={2} style={{ padding: "10px 10px 0", fontWeight: 700, fontSize: "13px", color: "#1b2537" }}>Total</td>
+                          <td style={{ padding: "10px 10px 0", textAlign: "right", fontWeight: 700, fontSize: "15px", color: "#246bfe" }}>{money(bill.total)}</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
     </div>
-    <div className="panel"><div className="panel-title"><h3>Top Selling Items</h3></div>
-      <div className="table-wrap"><table><thead><tr><th>Item</th><th>Quantity</th><th>Sales</th></tr></thead>
-        <tbody>{(data?.top || []).map(x => <tr key={x.name}><td>{x.name}</td><td>{x.quantity}</td><td>{money(x.amount)}</td></tr>)}</tbody></table></div>
-    </div>
-  </div>
+  );
 }
+
+
 function Stat({ title, value, icon }) { return <div className="stat"><div className="stat-icon">{icon}</div><div><span>{title}</span><strong>{value}</strong></div></div> }
 
 const billingMenuStyles = `
@@ -456,8 +638,11 @@ function ReceiptContent({ bill, settings }) {
 }
 
 function printReceipt(bill, settings) {
-  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,900&display=swap');@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{position:relative;text-align:left;background:#fff;overflow:hidden;padding:10px 5px}.watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.03;pointer-events:none;z-index:0;user-select:none;font-family:'Inter',Arial,sans-serif;font-size:110px;font-weight:200;color:#000;white-space:nowrap;letter-spacing:15px}.receipt-content{position:relative;z-index:1}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0;white-space:pre-line}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${buildReceiptHTML(bill, settings)}<script>window.onload=()=>{setTimeout(()=>{window.print();window.onafterprint=()=>window.close()},200)}<\/script></body></html>`;
-  const w = window.open("", "_blank", "width=420,height=700"); if (!w) return alert("Please allow popups for printing."); w.document.write(html); w.document.close();
+  const html = `<!doctype html><html><head><title>${bill.bill_no}</title><style>@page{size:${settings?.paper_size || "80mm"} auto;margin:0}body{-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Arial,sans-serif;width:${settings?.paper_size === "58mm" ? "58mm" : "80mm"};margin:0 auto;padding:5mm;box-sizing:border-box;font-size:12px}.receipt{position:relative;text-align:left;background:#fff;overflow:hidden;padding:10px 5px}.watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.15;pointer-events:none;z-index:0;user-select:none;font-family:'Inter',Arial,sans-serif;font-size:110px;font-weight:900;-webkit-text-stroke:2px #000;color:#000;white-space:nowrap;letter-spacing:15px}.receipt-content{position:relative;z-index:1}.center{text-align:center}.receipt h2{text-align:center;margin:0 0 4px;font-size:18px}.receipt p{text-align:center;margin:2px 0;white-space:pre-line}.rline{display:flex;justify-content:space-between;gap:10px;margin:5px 0}.bold{font-weight:bold;font-size:15px}hr{border:0;border-top:1px dashed #000;margin:7px 0}</style></head><body>${buildReceiptHTML(bill, settings)}<script>window.onload=()=>{setTimeout(()=>{window.print();window.onafterprint=()=>window.close()},200)}<\/script></body></html>`;
+  const w = window.open("", "_blank", "width=420,height=700");
+  if (!w) return alert("Please allow popups for printing.");
+  w.document.write(html);
+  w.document.close();
 }
 
 function buildReceiptHTML(bill, settings) {
