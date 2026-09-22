@@ -194,6 +194,41 @@ export default async function handler(req, res) {
       }
     }
 
+    if (r === 'categories' && req.method === 'POST') {
+      const name = String(req.body?.name || '').trim();
+      if (useDb) {
+        const q = await pool.query('INSERT INTO categories(shop_id,name) VALUES($1,$2) RETURNING id,name', [shopId, name]);
+        return send(res, 201, q.rows[0]);
+      } else {
+        const nextId = (mem.categories.reduce((max, c) => Math.max(max, c.id), 0) || 0) + 1;
+        const newCat = { id: nextId, name };
+        mem.categories.push(newCat);
+        return send(res, 201, newCat);
+      }
+    }
+    const catMatch = r.match(/^categories\/(\d+)$/);
+    if (catMatch && req.method === 'PUT') {
+      const catId = Number(catMatch[1]);
+      const name = String(req.body?.name || '').trim();
+      if (useDb) {
+        const q = await pool.query('UPDATE categories SET name=$1 WHERE id=$2 AND shop_id=$3 RETURNING id,name', [name, catId, shopId]);
+        return send(res, 200, q.rows[0]);
+      } else {
+        const cat = mem.categories.find(c => c.id === catId);
+        if (cat) cat.name = name;
+        return send(res, 200, cat || { id: catId, name });
+      }
+    }
+    if (catMatch && req.method === 'DELETE') {
+      const catId = Number(catMatch[1]);
+      if (useDb) {
+        await pool.query('DELETE FROM categories WHERE id=$1 AND shop_id=$2', [catId, shopId]);
+      } else {
+        mem.categories = mem.categories.filter(c => c.id !== catId);
+      }
+      return send(res, 200, { ok: true });
+    }
+
     // ITEMS
     if (r === 'items' && req.method === 'GET') {
       if (useDb) {
@@ -234,9 +269,9 @@ export default async function handler(req, res) {
         return send(res, 201, newItem);
       }
     }
-    m = r.match(/^items\/(\d+)$/);
-    if (m && req.method === 'PUT') {
-      const itemId = Number(m[1]);
+    const itemMatch = r.match(/^items\/(\d+)$/);
+    if (itemMatch && req.method === 'PUT') {
+      const itemId = Number(itemMatch[1]);
       const b = req.body || {};
 
       if (useDb) {
@@ -254,8 +289,8 @@ export default async function handler(req, res) {
         return send(res, 200, item || { id: itemId, ...b });
       }
     }
-    if (m && req.method === 'DELETE') {
-      const itemId = Number(m[1]);
+    if (itemMatch && req.method === 'DELETE') {
+      const itemId = Number(itemMatch[1]);
       if (useDb) {
         await pool.query('DELETE FROM items WHERE id=$1 AND shop_id=$2', [itemId, shopId]);
       } else {
@@ -338,9 +373,9 @@ export default async function handler(req, res) {
         return send(res, 201, newBill);
       }
     }
-    m = r.match(/^bills\/(\d+)$/);
-    if (m && req.method === 'GET') {
-      const billId = Number(m[1]);
+    const billMatch = r.match(/^bills\/(\d+)$/);
+    if (billMatch && req.method === 'GET') {
+      const billId = Number(billMatch[1]);
       if (useDb) {
         const q = await pool.query('SELECT * FROM bills WHERE id=$1 AND shop_id=$2', [billId, shopId]);
         if (!q.rows[0]) return send(res, 404, { message: 'Bill not found' });
@@ -351,8 +386,8 @@ export default async function handler(req, res) {
         return send(res, 200, bill);
       }
     }
-    if (m && req.method === 'DELETE') {
-      const billId = Number(m[1]);
+    if (billMatch && req.method === 'DELETE') {
+      const billId = Number(billMatch[1]);
       if (useDb) {
         await pool.query('DELETE FROM bills WHERE id=$1 AND shop_id=$2', [billId, shopId]);
       } else {
