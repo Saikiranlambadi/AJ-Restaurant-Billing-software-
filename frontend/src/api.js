@@ -18,14 +18,15 @@ function headers(json=true) { const h={}; if(json) h["Content-Type"]="applicatio
 
 async function request(path, options={}) {
   const res = await fetch(`/api/${path}`, { ...options, headers: { ...headers(options.body !== undefined), ...(options.headers||{}) } });
-  let body={}; try { body=await res.json(); } catch {}
-  if(!res.ok) {
+  let body = null;
+  try { body = await res.json(); } catch { body = null; }
+  if (!res.ok || body === null) {
     if (res.status === 401) {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       window.dispatchEvent(new Event("auth-invalid"));
     }
-    throw new Error(body.message || `Request failed (${res.status})`);
+    throw new Error(body?.message || `Request failed (${res.status})`);
   }
   return body;
 }
@@ -61,7 +62,7 @@ export async function addCategory(name){ return request("categories",{method:"PO
 export async function editCategory(id,name){ return request(`categories/${id}`,{method:"PUT",body:JSON.stringify({name})}); }
 export async function deleteCategory(id){ return request(`categories/${id}`,{method:"DELETE"}); }
 
-export async function getItems(){ return request("items"); }
+export async function getItems(reseed=false){ return request("items" + (reseed ? "?reseed=true" : "")); }
 export async function addItem(data){ return request("items",{method:"POST",body:JSON.stringify(data)}); }
 export async function editItem(id,data){ return request(`items/${id}`,{method:"PUT",body:JSON.stringify(data)}); }
 export async function deleteItem(id){ return request(`items/${id}`,{method:"DELETE"}); }

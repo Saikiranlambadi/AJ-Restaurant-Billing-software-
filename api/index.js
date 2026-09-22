@@ -230,21 +230,26 @@ export default async function handler(req, res) {
 
     // ITEMS
     if (r === 'items' && req.method === 'GET') {
+      const forceReseed = req.url && req.url.includes('reseed=true');
       if (useDb) {
+        if (forceReseed) {
+          await pool.query('DELETE FROM items WHERE shop_id=$1', [shopId]);
+        }
         let q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
-        if (q.rows.length === 0) {
-          for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name, x.category_id, x.price, x.available, x.image]);
+        if (q.rows.length === 0 || forceReseed) {
+          for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name, x.category_id, x.price, 1, x.image]);
           await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM items),1), true)`);
           q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
         }
         return send(res, 200, q.rows);
       } else {
-        if (!mem.items || mem.items.length === 0) {
-          mem.items = JSON.parse(JSON.stringify(items));
+        if (forceReseed || !mem.items || mem.items.length === 0) {
+          mem.items = JSON.parse(JSON.stringify(items)).map(x => ({ ...x, available: 1 }));
         }
         const catMap = Object.fromEntries(mem.categories.map(c => [c.id, c.name]));
         const result = mem.items.map(it => ({
           ...it,
+          available: it.available !== undefined && it.available !== null ? (it.available == 1 || it.available === true || it.available === "1" || it.available === "true" ? 1 : 0) : 1,
           category_name: catMap[it.category_id] || ''
         }));
         return send(res, 200, result);

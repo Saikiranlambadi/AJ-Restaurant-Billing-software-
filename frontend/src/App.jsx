@@ -427,17 +427,20 @@ function Billing() {
   const [loading, setLoading] = useState(true), [error, setError] = useState(null);
   const [showSplitModal, setShowSplitModal] = useState(false), [upiAmount, setUpiAmount] = useState(""), [cashAmount, setCashAmount] = useState("");
 
-  const loadData = () => {
+  const loadData = (forceReseed = false) => {
     setLoading(true);
     setError(null);
-    Promise.all([api.items(), api.categories(), api.settings()]).then(([i, c, s]) => {
-      const normalized = (i || []).map(item => ({
+    Promise.all([api.items(forceReseed), api.categories(), api.settings()]).then(([i, c, s]) => {
+      if (!Array.isArray(i)) {
+        throw new Error("Invalid menu items response from server");
+      }
+      const normalized = i.map(item => ({
         ...item,
         available: item.available !== undefined && item.available !== null ? (item.available == 1 || item.available === true || item.available === "1" || item.available === "true" ? 1 : 0) : 1,
         image: item.image || "/images/food-placeholder.jpg"
       }));
       setItems(normalized);
-      setCats(c || []);
+      setCats(Array.isArray(c) ? c : []);
       setSettings(s);
       setCart(prevCart => {
         if (!prevCart || !prevCart.length) return [];
@@ -534,7 +537,7 @@ function Billing() {
                     Clear Filter & Show All
                   </button>
                 )}
-                <button className="primary" onClick={loadData}>
+                <button className="primary" onClick={() => loadData(true)}>
                   Reload Menu Items
                 </button>
               </div>
