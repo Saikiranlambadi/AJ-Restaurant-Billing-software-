@@ -238,7 +238,10 @@ function Dashboard({ go }) {
         <Stat title="Today's Sales" value={money(data?.summary?.total)} icon="₹" />
         <Stat title="Total Bills" value={data?.summary?.bills || 0} icon="🧾" />
         <Stat title="Cash Sales" value={money(data?.summary?.cash)} icon="💵" />
-        <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="�      {/* Today's Orders List */}
+        <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="📱" />
+      </div>
+
+      {/* Today's Orders List */}
       <div className="panel" style={{ marginBottom: "18px" }}>
         <div className="panel-title" style={{ marginBottom: "14px" }}>
           <h3 style={{ margin: 0 }}>📋 Today's Orders ({bills.length})</h3>
@@ -376,7 +379,7 @@ function Dashboard({ go }) {
                       <tfoot>
                         <tr>
                           <td colSpan={2} style={{ padding: "10px 10px 0", fontWeight: 700, fontSize: "13px", color: "var(--text-main)" }}>Total</td>
-                          <td style={{ padding: "10px 10px 0", textAlign: "right", fontWeight 700, fontSize: "15px", color: "#246bfe" }}>{money(bill.total)}</td>
+                          <td style={{ padding: "10px 10px 0", textAlign: "right", fontWeight: 700, fontSize: "15px", color: "#246bfe" }}>{money(bill.total)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -386,10 +389,7 @@ function Dashboard({ go }) {
             ))}
           </div>
         )}
-      </div> </div>
-        )}
       </div>
-
     </div>
   );
 }
