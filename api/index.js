@@ -179,53 +179,35 @@ export default async function handler(req, res) {
     // CATEGORIES
     if (r === 'categories' && req.method === 'GET') {
       if (useDb) {
-        const q = await pool.query('SELECT id,name FROM categories WHERE shop_id=$1 ORDER BY id', [shopId]);
+        let q = await pool.query('SELECT id,name FROM categories WHERE shop_id=$1 ORDER BY id', [shopId]);
+        if (q.rows.length === 0) {
+          for (const x of categories) await pool.query('INSERT INTO categories(id, shop_id, name) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name]);
+          await pool.query(`SELECT setval(pg_get_serial_sequence('categories','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM categories),1), true)`);
+          q = await pool.query('SELECT id,name FROM categories WHERE shop_id=$1 ORDER BY id', [shopId]);
+        }
         return send(res, 200, q.rows);
       } else {
+        if (!mem.categories || mem.categories.length === 0) {
+          mem.categories = JSON.parse(JSON.stringify(categories));
+        }
         return send(res, 200, mem.categories.map(c => ({ id: c.id, name: c.name })));
       }
-    }
-    if (r === 'categories' && req.method === 'POST') {
-      const name = String(req.body?.name || '').trim();
-      if (useDb) {
-        const q = await pool.query('INSERT INTO categories(shop_id,name) VALUES($1,$2) RETURNING id,name', [shopId, name]);
-        return send(res, 201, q.rows[0]);
-      } else {
-        const nextId = (mem.categories.reduce((max, c) => Math.max(max, c.id), 0) || 0) + 1;
-        const newCat = { id: nextId, name };
-        mem.categories.push(newCat);
-        return send(res, 201, newCat);
-      }
-    }
-    let m = r.match(/^categories\/(\d+)$/);
-    if (m && req.method === 'PUT') {
-      const catId = Number(m[1]);
-      const name = String(req.body?.name || '').trim();
-      if (useDb) {
-        const q = await pool.query('UPDATE categories SET name=$1 WHERE id=$2 AND shop_id=$3 RETURNING id,name', [name, catId, shopId]);
-        return send(res, 200, q.rows[0]);
-      } else {
-        const cat = mem.categories.find(c => c.id === catId);
-        if (cat) cat.name = name;
-        return send(res, 200, cat || { id: catId, name });
-      }
-    }
-    if (m && req.method === 'DELETE') {
-      const catId = Number(m[1]);
-      if (useDb) {
-        await pool.query('DELETE FROM categories WHERE id=$1 AND shop_id=$2', [catId, shopId]);
-      } else {
-        mem.categories = mem.categories.filter(c => c.id !== catId);
-      }
-      return send(res, 200, { ok: true });
     }
 
     // ITEMS
     if (r === 'items' && req.method === 'GET') {
       if (useDb) {
-        const q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
+        let q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
+        if (q.rows.length === 0) {
+          for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name, x.category_id, x.price, x.available, x.image]);
+          await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM items),1), true)`);
+          q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
+        }
         return send(res, 200, q.rows);
       } else {
+        if (!mem.items || mem.items.length === 0) {
+          mem.items = JSON.parse(JSON.stringify(items));
+        }
         const catMap = Object.fromEntries(mem.categories.map(c => [c.id, c.name]));
         const result = mem.items.map(it => ({
           ...it,

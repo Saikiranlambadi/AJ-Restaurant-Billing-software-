@@ -433,6 +433,7 @@ function Billing() {
     Promise.all([api.items(), api.categories(), api.settings()]).then(([i, c, s]) => {
       const normalized = (i || []).map(item => ({
         ...item,
+        available: item.available !== undefined && item.available !== null ? (item.available == 1 || item.available === true || item.available === "1" || item.available === "true" ? 1 : 0) : 1,
         image: item.image || "/images/food-placeholder.jpg"
       }));
       setItems(normalized);
@@ -456,9 +457,10 @@ function Billing() {
   useEffect(() => { loadData(); }, []);
 
   const filtered = useMemo(() => items.filter(x => {
-    const matchCat = !cat || cat === "All" || x.category_name === cat || String(x.category_id) === String(cat);
+    const matchCat = !cat || cat === "All" || (x.category_name && x.category_name.trim().toLowerCase() === cat.trim().toLowerCase()) || String(x.category_id) === String(cat);
     const matchSearch = !search || x.name.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch && Boolean(x.available);
+    const isAvailable = x.available === 1 || x.available === true || x.available === "1" || x.available === "true" || x.available === undefined;
+    return matchCat && matchSearch && isAvailable;
   }), [items, cat, search]);
 
   const total = cart.reduce((s, x) => s + x.price * x.quantity, 0);
@@ -526,11 +528,16 @@ function Billing() {
               <p style={{ fontSize: "14px", margin: 0 }}>
                 {search ? `No items match "${search}"` : cat && cat !== "All" ? `No items available under "${cat}"` : "No available food items in the database."}
               </p>
-              {(search || (cat && cat !== "All")) && (
-                <button className="secondary" style={{ marginTop: "16px" }} onClick={() => { setSearch(""); setCat("All"); }}>
-                  Clear Filter & Show All
+              <div style={{ marginTop: "16px", display: "flex", gap: "10px", justifyContent: "center" }}>
+                {(search || (cat && cat !== "All")) && (
+                  <button className="secondary" onClick={() => { setSearch(""); setCat("All"); }}>
+                    Clear Filter & Show All
+                  </button>
+                )}
+                <button className="primary" onClick={loadData}>
+                  Reload Menu Items
                 </button>
-              )}
+              </div>
             </div>
           ) : (
             filtered.map(x => <button className="product-card" key={x.id} onClick={() => add(x)}><img className="product-image" src={x.image} alt={x.name} /><div className="product-name">{x.name}</div><div className="product-price">₹{Number(x.price).toFixed(2)}</div></button>)
