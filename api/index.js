@@ -241,15 +241,22 @@ export default async function handler(req, res) {
           await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM items),1), true)`);
           q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
         }
+        if (q.rows.length > 0 && q.rows.every(x => Number(x.available) === 0)) {
+          await pool.query('UPDATE items SET available=1 WHERE shop_id=$1', [shopId]);
+          q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
+        }
         return send(res, 200, q.rows);
       } else {
         if (forceReseed || !mem.items || mem.items.length === 0) {
           mem.items = JSON.parse(JSON.stringify(items)).map(x => ({ ...x, available: 1 }));
         }
+        if (mem.items.length > 0 && mem.items.every(x => x.available === 0 || x.available === '0' || x.available === false)) {
+          mem.items.forEach(x => { x.available = 1; });
+        }
         const catMap = Object.fromEntries(mem.categories.map(c => [c.id, c.name]));
         const result = mem.items.map(it => ({
           ...it,
-          available: it.available !== undefined && it.available !== null ? (it.available == 1 || it.available === true || it.available === "1" || it.available === "true" ? 1 : 0) : 1,
+          available: (it.available === 0 || it.available === false || it.available === '0' || it.available === 'false') ? 0 : 1,
           category_name: catMap[it.category_id] || ''
         }));
         return send(res, 200, result);
@@ -461,7 +468,10 @@ export default async function handler(req, res) {
           }
           if (Array.isArray(b.items) && b.items.length) {
             await pool.query('DELETE FROM items WHERE shop_id=$1', [shopId]);
-            for (const x of b.items) await pool.query('INSERT INTO items(id,shop_id,name,category_id,price,available,image) VALUES($1,$2,$3,$4,$5,$6,$7)', [Number(x.id), shopId, String(x.name || '').trim(), x.category_id ? Number(x.category_id) : null, Number(x.price) || 0, x.available ? 1 : 0, x.image || '']);
+            for (const x of b.items) {
+              const isAvail = (x.available === 0 || x.available === false || x.available === '0' || x.available === 'false') ? 0 : 1;
+              await pool.query('INSERT INTO items(id,shop_id,name,category_id,price,available,image) VALUES($1,$2,$3,$4,$5,$6,$7)', [Number(x.id), shopId, String(x.name || '').trim(), x.category_id ? Number(x.category_id) : null, Number(x.price) || 0, isAvail, x.image || '']);
+            }
             await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM categories),1), true)`);
           }
           if (Array.isArray(b.bills)) for (const x of b.bills) {
@@ -478,7 +488,7 @@ export default async function handler(req, res) {
           mem.categories = b.categories.map(x => ({ id: Number(x.id), name: String(x.name || '').trim() }));
         }
         if (Array.isArray(b.items) && b.items.length) {
-          mem.items = b.items.map(x => ({ id: Number(x.id), name: String(x.name || '').trim(), category_id: x.category_id ? Number(x.category_id) : null, price: Number(x.price) || 0, available: x.available ? 1 : 0, image: x.image || '' }));
+          mem.items = b.items.map(x => ({ id: Number(x.id), name: String(x.name || '').trim(), category_id: x.category_id ? Number(x.category_id) : null, price: Number(x.price) || 0, available: (x.available === 0 || x.available === false || x.available === '0' || x.available === 'false') ? 0 : 1, image: x.image || '' }));
         }
         if (Array.isArray(b.bills) && b.bills.length) {
           for (const x of b.bills) {
