@@ -193,7 +193,6 @@ export default async function handler(req, res) {
         return send(res, 200, mem.categories.map(c => ({ id: c.id, name: c.name })));
       }
     }
-
     if (r === 'categories' && req.method === 'POST') {
       const name = String(req.body?.name || '').trim();
       if (useDb) {
