@@ -434,6 +434,9 @@ function Billing() {
       if (!Array.isArray(i)) {
         throw new Error("Invalid menu items response from server");
       }
+      if (i.length === 0 && !forceReseed) {
+        return loadData(true);
+      }
       const normalized = i.map(item => ({
         ...item,
         available: item.available !== undefined && item.available !== null ? (item.available == 1 || item.available === true || item.available === "1" || item.available === "true" ? 1 : 0) : 1,
@@ -462,8 +465,7 @@ function Billing() {
   const filtered = useMemo(() => items.filter(x => {
     const matchCat = !cat || cat === "All" || (x.category_name && x.category_name.trim().toLowerCase() === cat.trim().toLowerCase()) || String(x.category_id) === String(cat);
     const matchSearch = !search || x.name.toLowerCase().includes(search.toLowerCase());
-    const isAvailable = x.available === 1 || x.available === true || x.available === "1" || x.available === "true" || x.available === undefined;
-    return matchCat && matchSearch && isAvailable;
+    return matchCat && matchSearch;
   }), [items, cat, search]);
 
   const total = cart.reduce((s, x) => s + x.price * x.quantity, 0);
