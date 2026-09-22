@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard, Receipt, Utensils, Tags, History, BarChart3,
   Settings, Plus, Minus, Trash2, Printer, Search,
-  Pencil, Save, X, Menu, CreditCard, LogOut, User, Lock, Eye, EyeOff
+  Pencil, Save, X, Menu, CreditCard, LogOut, User, Lock, Eye, EyeOff,
+  Sun, Moon
 } from "lucide-react";
 import { api } from "./api";
 
@@ -116,6 +117,12 @@ function App() {
   const [user, setUser] = useState(() => api.getCurrentUser());
   const [page, setPage] = useState("billing");
   const [mobile, setMobile] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   if (!user) {
     return <LoginPage onLoginSuccess={setUser} />;
@@ -147,10 +154,28 @@ function App() {
         <button className="icon-btn mobile-menu" onClick={() => setMobile(true)}><Menu /></button>
         <div><h2>{nav.find(x => x[0] === page)?.[1]}</h2><span>{(() => { const d = new Date(); const dd = String(d.getDate()).padStart(2,'0'); const mm = String(d.getMonth()+1).padStart(2,'0'); const yyyy = d.getFullYear(); return `${dd}-${mm}-${yyyy}`; })()}</span></div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div className="theme-toggle">
+            <button
+              className={`theme-btn ${theme === "light" ? "active" : ""}`}
+              onClick={() => setTheme("light")}
+              title="Switch to Light Theme"
+            >
+              <Sun size={15} />
+              <span>Light</span>
+            </button>
+            <button
+              className={`theme-btn ${theme === "dark" ? "active" : ""}`}
+              onClick={() => setTheme("dark")}
+              title="Switch to Dark Theme"
+            >
+              <Moon size={15} />
+              <span>Dark</span>
+            </button>
+          </div>
           <button className="avatar" title={`Logged in as ${user.name} (${user.role})`}>AJ</button>
           <div style={{ display: "flex", flexDirection: "column", fontSize: "13px", lineHeight: "1.2" }}>
-            <span style={{ fontWeight: 700, color: "#1e293b" }}>{user.name}</span>
-            <span style={{ fontSize: "11px", color: "#64748b" }}>{user.role}</span>
+            <span style={{ fontWeight: 700, color: "var(--text-main)" }}>{user.name}</span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>{user.role}</span>
           </div>
           <button className="secondary" onClick={handleLogout} style={{ padding: "6px 10px", fontSize: "12px", marginLeft: "6px" }} title="Logout">
             <LogOut size={14} />
@@ -213,28 +238,25 @@ function Dashboard({ go }) {
         <Stat title="Today's Sales" value={money(data?.summary?.total)} icon="₹" />
         <Stat title="Total Bills" value={data?.summary?.bills || 0} icon="🧾" />
         <Stat title="Cash Sales" value={money(data?.summary?.cash)} icon="💵" />
-        <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="📱" />
-      </div>
-
-      {/* Today's Orders List */}
+        <Stat title="UPI Sales" value={money(data?.summary?.upi)} icon="�      {/* Today's Orders List */}
       <div className="panel" style={{ marginBottom: "18px" }}>
         <div className="panel-title" style={{ marginBottom: "14px" }}>
           <h3 style={{ margin: 0 }}>📋 Today's Orders ({bills.length})</h3>
         </div>
         {bills.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "30px 20px", color: "#9aa4b4" }}>
+          <div style={{ textAlign: "center", padding: "30px 20px", color: "var(--text-muted)" }}>
             <Receipt size={36} style={{ opacity: 0.4, marginBottom: "8px" }} />
             <p style={{ margin: 0 }}>No orders printed today yet.</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {bills.map((bill, idx) => (
-              <div key={bill.id} style={{ border: "1px solid #e7ebf2", borderRadius: "10px", overflow: "visible", background: "#fff" }}>
+              <div key={bill.id} style={{ border: "1px solid var(--border-color)", borderRadius: "10px", overflow: "visible", background: "var(--bg-card)" }}>
 
                 {/* Order Header Row */}
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "14px 16px", background: expanded[bill.id] ? "#f0f5ff" : "#fafbfc",
+                  padding: "14px 16px", background: expanded[bill.id] ? "var(--bg-subtle)" : "var(--bg-card)",
                   borderRadius: expanded[bill.id] ? "10px 10px 0 0" : "10px", gap: "12px"
                 }}>
                   {/* Left: number badge + info */}
@@ -248,11 +270,11 @@ function Dashboard({ go }) {
                       {bills.length - idx}
                     </div>
                     <div style={{ textAlign: "left", minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "14px", color: "#1b2537" }}>
+                      <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-main)" }}>
                         Order {bills.length - idx}&nbsp;
-                        <span style={{ fontSize: "12px", fontWeight: 400, color: "#8492a6" }}>#{bill.bill_no}</span>
+                        <span style={{ fontSize: "12px", fontWeight: 400, color: "var(--text-muted)" }}>#{bill.bill_no}</span>
                       </div>
-                      <div style={{ fontSize: "12px", color: "#8492a6", marginTop: "2px" }}>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
                         {new Date(bill.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         &nbsp;·&nbsp;{bill.payment_method}
                         &nbsp;·&nbsp;{(bill.items || []).length} item{bill.items?.length !== 1 ? "s" : ""}
@@ -272,9 +294,9 @@ function Dashboard({ go }) {
                         onClick={e => { e.stopPropagation(); setDropdown(dropdown === bill.id ? null : bill.id); }}
                         style={{
                           width: "32px", height: "32px", borderRadius: "8px",
-                          background: dropdown === bill.id ? "#e8edf5" : "#f1f4f8",
+                          background: "var(--bg-subtle)",
                           border: 0, cursor: "pointer", display: "flex", alignItems: "center",
-                          justifyContent: "center", fontSize: "18px", color: "#536174",
+                          justifyContent: "center", fontSize: "18px", color: "var(--text-main)",
                           letterSpacing: "1px", fontWeight: 700, transition: "background 0.15s"
                         }}
                         title="More options"
@@ -287,7 +309,7 @@ function Dashboard({ go }) {
                           onClick={e => e.stopPropagation()}
                           style={{
                             position: "absolute", right: 0, top: "38px", zIndex: 100,
-                            background: "#fff", border: "1px solid #e2e8f0",
+                            background: "var(--bg-card)", border: "1px solid var(--border-color)",
                             borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
                             minWidth: "160px", overflow: "hidden"
                           }}
@@ -300,15 +322,15 @@ function Dashboard({ go }) {
                             style={{
                               width: "100%", display: "flex", alignItems: "center", gap: "10px",
                               padding: "11px 14px", border: 0, background: "transparent",
-                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "#1b2537",
+                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--text-main)",
                               textAlign: "left", transition: "background 0.12s"
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = "#f0f5ff"}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                           >
                             <Printer size={15} /> Print Again
                           </button>
-                          <div style={{ height: "1px", background: "#f0f2f5" }} />
+                          <div style={{ height: "1px", background: "var(--border-subtle)" }} />
                           <button
                             onClick={() => {
                               setDropdown(null);
@@ -317,10 +339,10 @@ function Dashboard({ go }) {
                             style={{
                               width: "100%", display: "flex", alignItems: "center", gap: "10px",
                               padding: "11px 14px", border: 0, background: "transparent",
-                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "#1b2537",
+                              cursor: "pointer", fontSize: "13px", fontWeight: 600, color: "var(--text-main)",
                               textAlign: "left", transition: "background 0.12s"
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = "#f0f5ff"}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                           >
                             <Receipt size={15} /> {expanded[bill.id] ? "Hide Details" : "View Details"}
@@ -333,28 +355,28 @@ function Dashboard({ go }) {
 
                 {/* Expanded items list */}
                 {expanded[bill.id] && (
-                  <div style={{ padding: "0 16px 14px", borderTop: "1px solid #edf0f5" }}>
+                  <div style={{ padding: "0 16px 14px", borderTop: "1px solid var(--border-subtle)" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
                       <thead>
                         <tr>
-                          <th style={{ textAlign: "left", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Item</th>
-                          <th style={{ textAlign: "center", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Qty</th>
-                          <th style={{ textAlign: "right", padding: "7px 10px", fontSize: "11px", color: "#9aa4b4", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid #edf0f5" }}>Amount</th>
+                          <th style={{ textAlign: "left", padding: "7px 10px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid var(--border-subtle)" }}>Item</th>
+                          <th style={{ textAlign: "center", padding: "7px 10px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid var(--border-subtle)" }}>Qty</th>
+                          <th style={{ textAlign: "right", padding: "7px 10px", fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", borderBottom: "1px solid var(--border-subtle)" }}>Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {(bill.items || []).map((item, i) => (
-                          <tr key={i} style={{ background: i % 2 === 0 ? "#fafbfc" : "#fff" }}>
-                            <td style={{ padding: "9px 10px", fontSize: "13px", color: "#2d3748", fontWeight: 500, borderBottom: "1px solid #f0f2f5" }}>{item.item_name}</td>
-                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "center", color: "#4a5568", borderBottom: "1px solid #f0f2f5" }}>× {item.quantity}</td>
-                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "right", fontWeight: 600, color: "#246bfe", borderBottom: "1px solid #f0f2f5" }}>{money(item.amount)}</td>
+                          <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-subtle)" : "var(--bg-card)" }}>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", color: "var(--text-main)", fontWeight: 500, borderBottom: "1px solid var(--border-subtle)" }}>{item.item_name}</td>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "center", color: "var(--text-muted)", borderBottom: "1px solid var(--border-subtle)" }}>× {item.quantity}</td>
+                            <td style={{ padding: "9px 10px", fontSize: "13px", textAlign: "right", fontWeight: 600, color: "#246bfe", borderBottom: "1px solid var(--border-subtle)" }}>{money(item.amount)}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
                         <tr>
-                          <td colSpan={2} style={{ padding: "10px 10px 0", fontWeight: 700, fontSize: "13px", color: "#1b2537" }}>Total</td>
-                          <td style={{ padding: "10px 10px 0", textAlign: "right", fontWeight: 700, fontSize: "15px", color: "#246bfe" }}>{money(bill.total)}</td>
+                          <td colSpan={2} style={{ padding: "10px 10px 0", fontWeight: 700, fontSize: "13px", color: "var(--text-main)" }}>Total</td>
+                          <td style={{ padding: "10px 10px 0", textAlign: "right", fontWeight 700, fontSize: "15px", color: "#246bfe" }}>{money(bill.total)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -363,6 +385,8 @@ function Dashboard({ go }) {
               </div>
             ))}
           </div>
+        )}
+      </div> </div>
         )}
       </div>
 
