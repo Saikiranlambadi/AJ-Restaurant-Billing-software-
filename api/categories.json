@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "name": "STARTERS (VEG)"
+  },
+  {
+    "id": 2,
+    "name": "STARTERS (NON VEG)"
+  },
+  {
+    "id": 3,
+    "name": "VEG CURRYS"
+  },
+  {
+    "id": 4,
+    "name": "NON VEG"
+  },
+  {
+    "id": 5,
+    "name": "NAANS"
+  },
+  {
+    "id": 6,
+    "name": "BIRYANI VEG"
+  },
+  {
+    "id": 7,
+    "name": "NON VEG BIRYANI"
+  },
+  {
+    "id": 8,
+    "name": "BEVERAGES & COOL DRINKS"
+  }
+]

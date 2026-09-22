@@ -10,8 +10,8 @@ import { api } from "./api";
 const money = n => `₹${Number(n || 0).toFixed(2)}`;
 
 function LoginPage({ onLoginSuccess }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("ajay");
+  const [password, setPassword] = useState("Ajay@1234");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -123,6 +123,12 @@ function App() {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    const handleAuthInvalid = () => setUser(null);
+    window.addEventListener("auth-invalid", handleAuthInvalid);
+    return () => window.removeEventListener("auth-invalid", handleAuthInvalid);
+  }, []);
 
   if (!user) {
     return <LoginPage onLoginSuccess={setUser} />;
