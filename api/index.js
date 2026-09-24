@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -30,6 +32,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret-in-vercel';
 const SHOP_ID = 'aj-main-shop';
 
 function loadJson(filename, fallback) {
+  try {
+    const loaded = require(`./${filename}`);
+    if (loaded && (Array.isArray(loaded) ? loaded.length > 0 : Object.keys(loaded).length > 0)) {
+      return loaded;
+    }
+  } catch (e) {
+    // ignore require error and fallback to fs
+  }
   try {
     const filePath = path.join(__dirname, filename);
     if (fs.existsSync(filePath)) {
@@ -95,13 +105,13 @@ async function db() {
     await pool.query(`INSERT INTO shops(id, username, password_hash, name, role) VALUES($1,$2,$3,$4,$5) ON CONFLICT(id) DO NOTHING`, [SHOP_ID, 'ajay', hash, 'Ajay', 'Owner']);
     await pool.query(`INSERT INTO settings(shop_id, restaurant_name, address, phone, paper_size) VALUES($1,$2,$3,$4,$5) ON CONFLICT(shop_id) DO NOTHING`, [SHOP_ID, defaultSettings.restaurant_name, defaultSettings.address, defaultSettings.phone, defaultSettings.paper_size]);
     const c = await pool.query('SELECT COUNT(*)::int AS n FROM categories WHERE shop_id=$1', [SHOP_ID]);
-    if (c.rows[0].n === 0) {
-      for (const x of categories) await pool.query('INSERT INTO categories(id, shop_id, name) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING', [x.id, SHOP_ID, x.name]);
+    if (c.rows[0].n === 0 && categories.length > 0) {
+      for (const x of categories) await pool.query('INSERT INTO categories(id, shop_id, name) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET shop_id=EXCLUDED.shop_id, name=EXCLUDED.name', [x.id, SHOP_ID, x.name]);
       await pool.query(`SELECT setval(pg_get_serial_sequence('categories','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM categories),1), true)`);
     }
     const it = await pool.query('SELECT COUNT(*)::int AS n FROM items WHERE shop_id=$1', [SHOP_ID]);
-    if (it.rows[0].n === 0) {
-      for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING', [x.id, SHOP_ID, x.name, x.category_id, x.price, x.available, x.image]);
+    if (it.rows[0].n === 0 && items.length > 0) {
+      for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO UPDATE SET shop_id=EXCLUDED.shop_id, name=EXCLUDED.name, category_id=EXCLUDED.category_id, price=EXCLUDED.price, available=EXCLUDED.available, image=EXCLUDED.image', [x.id, SHOP_ID, x.name, x.category_id, x.price, x.available, x.image]);
       await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM items),1), true)`);
     }
     useDb = true;
@@ -180,8 +190,8 @@ export default async function handler(req, res) {
     if (r === 'categories' && req.method === 'GET') {
       if (useDb) {
         let q = await pool.query('SELECT id,name FROM categories WHERE shop_id=$1 ORDER BY id', [shopId]);
-        if (q.rows.length === 0) {
-          for (const x of categories) await pool.query('INSERT INTO categories(id, shop_id, name) VALUES($1,$2,$3) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name]);
+        if (q.rows.length === 0 && categories.length > 0) {
+          for (const x of categories) await pool.query('INSERT INTO categories(id, shop_id, name) VALUES($1,$2,$3) ON CONFLICT(id) DO UPDATE SET shop_id=EXCLUDED.shop_id, name=EXCLUDED.name', [x.id, shopId, x.name]);
           await pool.query(`SELECT setval(pg_get_serial_sequence('categories','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM categories),1), true)`);
           q = await pool.query('SELECT id,name FROM categories WHERE shop_id=$1 ORDER BY id', [shopId]);
         }
@@ -236,8 +246,8 @@ export default async function handler(req, res) {
           await pool.query('DELETE FROM items WHERE shop_id=$1', [shopId]);
         }
         let q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
-        if (q.rows.length === 0 || forceReseed) {
-          for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO NOTHING', [x.id, shopId, x.name, x.category_id, x.price, 1, x.image]);
+        if ((q.rows.length === 0 || forceReseed) && items.length > 0) {
+          for (const x of items) await pool.query('INSERT INTO items(id, shop_id, name, category_id, price, available, image) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(id) DO UPDATE SET shop_id=EXCLUDED.shop_id, name=EXCLUDED.name, category_id=EXCLUDED.category_id, price=EXCLUDED.price, available=EXCLUDED.available, image=EXCLUDED.image', [x.id, shopId, x.name, x.category_id, x.price, 1, x.image]);
           await pool.query(`SELECT setval(pg_get_serial_sequence('items','id'), GREATEST((SELECT COALESCE(MAX(id),1) FROM items),1), true)`);
           q = await pool.query('SELECT i.id,i.name,i.category_id,i.price,i.available,i.image,c.name AS category_name FROM items i LEFT JOIN categories c ON c.id=i.category_id AND c.shop_id=i.shop_id WHERE i.shop_id=$1 ORDER BY i.id', [shopId]);
         }
